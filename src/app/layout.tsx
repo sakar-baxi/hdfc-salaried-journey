@@ -4,8 +4,6 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { JourneyProvider } from "@/app/context/JourneyContext";
 import { cn } from "@/lib/utils";
-
-// Import the font
 import { Plus_Jakarta_Sans } from "next/font/google";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -13,7 +11,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700"],
   variable: "--font-sans",
 });
-
 
 export const metadata: Metadata = {
   title: "HDFC Bank - Salaried Account",
@@ -26,21 +23,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+    // --- MODIFIED: Removed 'dark' class ---
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Fallback font link just in case */}
         <link
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
+      {/* --- MODIFIED: Removed all extra classes --- */}
       <body 
         className={cn(
-          "min-h-screen bg-background font-sans antialiased", 
+          "min-h-screen font-sans antialiased", 
           plusJakartaSans.variable
         )}
       >
-        {/* This Provider MUST wrap the children */}
         <JourneyProvider>
           {children}
         </JourneyProvider>

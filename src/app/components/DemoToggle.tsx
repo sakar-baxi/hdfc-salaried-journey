@@ -4,7 +4,7 @@
 
 import { useJourney } from "@/app/context/JourneyContext";
 // --- THIS IS THE FIX ---
-// We must import UserType from the new stepDefinitions file
+// We must import UserType from the new stepDefinitions files
 import { UserType } from "@/app/context/stepDefinitions";
 // ----------------------
 import { Toggle } from "@/components/ui/toggle";

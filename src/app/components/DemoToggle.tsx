@@ -2,7 +2,11 @@
 
 "use client";
 
-import { useJourney, UserType } from "@/app/context/JourneyContext";
+import { useJourney } from "@/app/context/JourneyContext";
+// --- THIS IS THE FIX ---
+// We must import UserType from the new stepDefinitions file
+import { UserType } from "@/app/context/stepDefinitions";
+// ----------------------
 import { Toggle } from "@/components/ui/toggle";
 import { Users, User, UserCheck } from "lucide-react";
 

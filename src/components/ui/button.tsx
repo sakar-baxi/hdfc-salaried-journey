@@ -48,7 +48,25 @@ export interface ButtonProps
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  // --- THIS IS THE FIX ---
+  // We destructure the conflicting props out...
+  ({ 
+    className, 
+    variant, 
+    size, 
+    asChild = false, 
+    onAnimationStart,
+    onAnimationEnd,
+    onAnimationIteration,
+    // Strip HTML drag handlers to avoid type conflict with Framer Motion's drag handlers
+    onDrag,
+    onDragStart,
+    onDragEnd,
+    onDragOver,
+    onDragEnter,
+    onDragLeave,
+    ...props // ...so that `props` no longer contains them.
+  }, ref) => {
     
     // Use motion.button for CTA and default
     if (variant === "primary-cta" || variant === "default") {
@@ -57,7 +75,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className={cn(buttonVariants({ variant, size, className }))}
           ref={ref}
           whileTap={{ scale: 0.98 }}
-          {...props}
+          {...props} // This `props` is now safe to spread
         />
       )
     }
@@ -67,6 +85,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        // We pass the original animation props here, since
+        // this is just a standard React <button> or <Slot>
+        onAnimationStart={onAnimationStart}
+        onAnimationEnd={onAnimationEnd}
+        onAnimationIteration={onAnimationIteration}
+        // Preserve standard drag handlers on non-motion branch
+        onDrag={onDrag}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+        onDragOver={onDragOver}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
         {...props}
       />
     )

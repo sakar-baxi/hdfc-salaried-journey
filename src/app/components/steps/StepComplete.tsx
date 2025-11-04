@@ -1,14 +1,20 @@
-/* src/app/components/steps/StepComplete.tsx */
-
 "use client";
 
+import { useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
 
 export default function StepComplete() {
-  const { userType, setUserType } = useJourney();
+  const { userType, resetJourney } = useJourney();
+
+  // --- Track this screen view ---
+  useEffect(() => {
+    trackEvent('page_viewed', { page: 'complete' });
+    trackEvent('account_creation_success', { user_type: userType });
+  }, [userType]);
 
   const isConverted = userType === 'etb-with-acct';
   
@@ -17,9 +23,13 @@ export default function StepComplete() {
     ? "Your account XXXX-1234 has been successfully converted." 
     : "Welcome to HDFC Bank! Your salaried account is ready.";
 
+  const handleRestart = () => {
+    trackEvent('journey_restarted');
+    resetJourney();
+  };
+
   return (
-    // MODIFIED: Added responsive classes
-    <Card className="w-full border-none md:border md:shadow-lg md:rounded-lg mx-auto">
+    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
       <CardHeader className="items-center text-center">
         <CheckCircle2 className="w-16 h-16 text-success mb-4" />
         <CardTitle className="text-text-darkest text-2xl">{title}</CardTitle>
@@ -29,7 +39,6 @@ export default function StepComplete() {
       </CardHeader>
       <CardContent className="text-center">
         <div className="p-4 bg-muted rounded-md space-y-2">
-          {/* MODIFIED: Fixed logic as requested */}
           {isConverted ? (
             <>
               <p className="text-sm text-text-gray-2">Converted Account Number</p>
@@ -47,7 +56,7 @@ export default function StepComplete() {
         <Button 
           variant="primary-cta" 
           className="w-full mt-6" 
-          onClick={() => setUserType('ntb')} // Reset to start
+          onClick={handleRestart}
         >
           Start New Application
         </Button>

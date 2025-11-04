@@ -1,16 +1,31 @@
-/* src/app/components/steps/StepConvertAccount.tsx */
-
 "use client";
 
+import { useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
 
 export default function StepConvertAccount() {
   const { nextStep } = useJourney();
 
+  // --- Track this screen view ---
+  useEffect(() => {
+    trackEvent('page_viewed', { page: 'convertAccount' });
+  }, []);
+
+  const handleConvert = () => {
+    trackEvent('etb_choice_made', { choice: 'convert' });
+    nextStep();
+  };
+
+  const handleCreateNew = () => {
+    trackEvent('etb_choice_made', { choice: 'create_new' });
+    nextStep();
+  };
+
   return (
-    <Card className="w-full border-none md:border md:shadow-lg md:rounded-lg mx-auto">
+    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
       <CardHeader>
         <CardTitle className="text-text-darkest">Welcome Back!</CardTitle>
         <CardDescription>
@@ -27,10 +42,10 @@ export default function StepConvertAccount() {
         </p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-3">
-        <Button variant="primary-cta" className="w-full" onClick={nextStep}>
+        <Button variant="primary-cta" className="w-full" onClick={handleConvert}>
           Yes, Convert to Salaried Account
         </Button>
-        <Button variant="outline" className="w-full" onClick={nextStep}>
+        <Button variant="outline" className="w-full" onClick={handleCreateNew}>
           No, Create a New Account
         </Button>
       </CardFooter>

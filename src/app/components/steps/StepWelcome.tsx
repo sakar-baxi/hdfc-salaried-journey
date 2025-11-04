@@ -1,30 +1,34 @@
-/* src/app/components/steps/StepWelcome.tsx */
-
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
 
 export default function StepWelcome() {
   const { nextStep } = useJourney();
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = React.useState(30);
-  
-  const [mobileNumber, setMobileNumber] = useState("");
+
+  // --- Track the initial page view ---
+  useEffect(() => {
+    trackEvent('page_viewed', { page: 'welcome' });
+  }, []);
 
   const handleGenerateOtp = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setTimer(30); 
     setTimeout(() => {
+      // --- Track the OTP generation ---
+      trackEvent('form_submitted_generate_otp');
       setIsLoading(false);
-      setOtpSent(true);
+      setOtpSent(true); 
     }, 1000);
   };
   
@@ -32,11 +36,14 @@ export default function StepWelcome() {
     e.preventDefault();
     setIsLoading(true);
     setTimeout(() => {
+      // --- Track the OTP verification ---
+      trackEvent('otp_verified');
       setIsLoading(false);
-      nextStep();
+      nextStep(); // Move to EkycHandler
     }, 1000);
   };
 
+  // Timer effect for "Resend"
   React.useEffect(() => {
     if (otpSent && timer > 0) {
       const interval = setInterval(() => setTimer((t) => t - 1), 1000);
@@ -45,8 +52,7 @@ export default function StepWelcome() {
   }, [otpSent, timer]);
 
   return (
-    <Card className="w-full border-none md:border md:shadow-lg md:rounded-lg mx-auto">
-      {/* Add autoComplete="off" to the form for good measure */}
+    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
       <form onSubmit={otpSent ? handleVerifyOtp : handleGenerateOtp} autoComplete="off">
         <CardHeader>
           <CardTitle className="text-text-darkest">
@@ -54,26 +60,21 @@ export default function StepWelcome() {
           </CardTitle>
           <CardDescription>
             {otpSent 
-              ? `We've sent a 6-digit OTP to +91 ${mobileNumber || "your number"}.` 
-              : "Please provide your details to start your application."}
+              ? `We've sent a 6-digit OTP to +91 9876543210.` 
+              : "Details are pre-filled for this demo. Click 'Get OTP' to continue."}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!otpSent ? (
             <>
+              {/* All fields now use defaultValue to pre-fill and avoid errors */}
               <div className="space-y-2">
                 <Label htmlFor="mobile">Mobile Number</Label>
                 <Input 
                   id="mobile" 
-                  placeholder="98XXXXXX00" 
                   type="tel" 
-                  inputMode="numeric" 
-                  pattern="[0-9]*" 
-                  maxLength={10} 
                   required 
-                  value={mobileNumber || ""} 
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  // --- FIX: Tell the browser this is a phone number ---
+                  defaultValue="9876543210"
                   autoComplete="tel"
                 />
               </div>
@@ -81,16 +82,20 @@ export default function StepWelcome() {
                 <Label htmlFor="pan">PAN</Label>
                 <Input 
                   id="pan" 
-                  placeholder="ABCDE1234F" 
-                  autoCapitalize="characters" 
-                  maxLength={10} 
                   required 
-                  autoComplete="pan" 
+                  defaultValue="ABCDE1234F"
+                  autoComplete="off" 
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="dob">Date of Birth</Label>
-                <Input id="dob" type="date" required autoComplete="bday" />
+                <Input 
+                  id="dob" 
+                  type="date" 
+                  required 
+                  defaultValue="1990-01-01"
+                  autoComplete="bday" 
+                />
               </div>
             </>
           ) : (
@@ -99,13 +104,11 @@ export default function StepWelcome() {
                 <Label htmlFor="otp">Enter 6-digit OTP</Label>
                 <Input 
                   id="otp" 
-                  placeholder="XXXXXX" 
                   maxLength={6} 
                   type="tel" 
                   inputMode="numeric" 
-                  pattern="[0-9]*" 
                   required 
-                  // --- FIX: Tell the browser this is an SMS one-time-code ---
+                  defaultValue="134561"
                   autoComplete="one-time-code"
                 />
               </div>

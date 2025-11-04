@@ -1,7 +1,8 @@
 /* src/app/context/stepDefinitions.ts */
 
 import StepWelcome from "@/app/components/steps/StepWelcome";
-import StepEkycRedirect from "@/app/components/steps/StepEkycRedirect";
+// --- Ensure this line is 'StepEkycHandler' ---
+import StepEkycHandler from "@/app/components/steps/StepEkycHandler";
 import StepCombinedDetails from "@/app/components/steps/StepCombinedDetails";
 import StepKycChoice from "@/app/components/steps/StepKycChoice";
 import StepConvertAccount from "@/app/components/steps/StepConvertAccount";
@@ -22,25 +23,24 @@ export interface Step {
 
 export const ALL_STEPS: Record<string, Step> = {
   welcome: { id: "welcome", title: "Mobile Verification" },
-  ekycRedirect: { id: "ekycRedirect", title: "Aadhaar EKYC" },
+  // --- Ensure this ID is 'ekycHandler' ---
+  ekycHandler: { id: "ekycHandler", title: "Aadhaar EKYC" },
   combinedDetails: { id: "combinedDetails", title: "Your Details" },
   kycChoice: { id: "kycChoice", title: "KYC Choice" },
-  // ETB Steps
   convertAccount: { id: "convertAccount", title: "Convert Account" },
-  // KYC Branch Steps
   physicalKyc: { id: "physicalKyc", title: "Application Saved" },
   kycInstructions: { id: "kycInstructions", title: "Video KYC" },
   kycFace: { id: "kycFace", title: "Face Capture" },
   kycPan: { id: "kycPan", title: "PAN Capture" },
   kycPanFace: { id: "kycPanFace", title: "Final Proof" },
   kycLoading: { id: "kycLoading", title: "Verifying KYC" },
-  // End Step
   complete: { id: "complete", title: "Account Created" },
 };
 
 export const STEP_COMPONENTS: Record<string, React.ComponentType> = {
   welcome: StepWelcome,
-  ekycRedirect: StepEkycRedirect,
+  // --- Ensure this points to the correct component ---
+  ekycHandler: StepEkycHandler,
   combinedDetails: StepCombinedDetails,
   kycChoice: StepKycChoice,
   convertAccount: StepConvertAccount,

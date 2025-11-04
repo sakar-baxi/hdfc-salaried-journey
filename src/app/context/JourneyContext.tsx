@@ -6,6 +6,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect, useCa
 import { ALL_STEPS, STEP_COMPONENTS } from "./stepDefinitions";
 import type { Step, UserType } from "./stepDefinitions";
 
+
 // --- 1. Types ---
 interface JourneyState {
   userType: UserType;
@@ -25,7 +26,8 @@ const getInitialStepsForUserType = (userType: UserType): Step[] => {
   let stepIds: string[] = [];
   switch (userType) {
     case "ntb":
-      stepIds = ["welcome", "ekycRedirect", "combinedDetails", "kycChoice"];
+      // --- MODIFIED: Use 'ekycHandler' ---
+      stepIds = ["welcome", "ekycHandler", "combinedDetails", "kycChoice"];
       break;
     case "etb-no-acct":
       stepIds = ["welcome", "combinedDetails", "complete"];

@@ -1,24 +1,28 @@
-/* src/app/components/steps/StepKycInstructions.tsx */
-
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, FileText, Lightbulb, AlertTriangle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
 
 export default function StepKycInstructions() {
-  // We get the new goToStep function to handle branching
   const { goToStep } = useJourney();
-
-  // This state is simulated. In a real app, the StepKycLoading
-  // would call `goToStep("kycInstructions", { failed: true })`
-  // and we would read that state here.
   const [kycFailed, setKycFailed] = React.useState(false); 
 
+  // --- Track this screen view ---
+  useEffect(() => {
+    trackEvent('page_viewed', { page: 'kycInstructions', kyc_attempt: kycFailed ? 2 : 1 });
+  }, [kycFailed]);
+
+  const handleStart = () => {
+    trackEvent('vkyc_flow_started');
+    goToStep("kycFace");
+  };
+
   return (
-    <Card className="w-full border-none md:border md:shadow-lg md:rounded-lg mx-auto">
+    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
       <CardHeader>
         <CardTitle className="text-text-darkest">Video KYC Instructions</CardTitle>
         <CardDescription>
@@ -27,7 +31,6 @@ export default function StepKycInstructions() {
       </CardHeader>
       <CardContent className="space-y-6">
         
-        {/* This is the failure message block */}
         {kycFailed && (
           <div className="p-4 bg-destructive/10 border border-destructive text-destructive rounded-lg flex items-center space-x-3">
             <AlertTriangle className="w-5 h-5" />
@@ -58,7 +61,7 @@ export default function StepKycInstructions() {
         <Button 
           variant="primary-cta" 
           className="w-full" 
-          onClick={() => goToStep("kycFace")} // Use goToStep to move to the next branch step
+          onClick={handleStart}
         >
           {kycFailed ? "Try Again" : "I'm Ready, Start Video KYC"}
         </Button>

@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ConsentCheckboxProps {
   id: string;
@@ -21,6 +22,9 @@ interface ConsentCheckboxProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   required?: boolean;
+  title?: string;
+  description?: string;
+  content?: string[];
 }
 
 export default function ConsentCheckbox({
@@ -30,23 +34,34 @@ export default function ConsentCheckbox({
   checked,
   onCheckedChange,
   required = false,
+  title = "Terms and Conditions",
+  description = "Please review carefully to understand your rights and the security of your data.",
+  content = [
+    "Accuracy: You confirm all data provided matches official Aadhaar records.",
+    "Authorization: You permit secure data verification with trusted partners.",
+    "Service Quality: We maintain high standards for your banking experience.",
+    "Communication: Receive real-time alerts for your security.",
+    "Eligibility: Verified based on employment and profile details.",
+    "Compliance: Adherence to the latest digital banking regulations."
+  ]
 }: ConsentCheckboxProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasScrolledToBottom, setHasScrolledToBottom] = useState(false);
 
-  const handleCheckboxClick = (newChecked: boolean) => {
-    if (newChecked && termsUrl) {
+  const handleCheckboxClick = (newChecked: boolean | string) => {
+    const isChecked = newChecked === true;
+    if (isChecked) {
       setIsDialogOpen(true);
       setHasScrolledToBottom(false);
     } else {
-      onCheckedChange(newChecked);
+      onCheckedChange(isChecked);
     }
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
     const isAtBottom =
-      target.scrollHeight - target.scrollTop <= target.clientHeight + 10;
+      target.scrollHeight - target.scrollTop <= target.clientHeight + 20;
     setHasScrolledToBottom(isAtBottom);
   };
 
@@ -60,17 +75,17 @@ export default function ConsentCheckbox({
 
   return (
     <>
-      <div className="flex items-start space-x-3">
+      <div className="flex items-center space-x-3 group">
         <Checkbox
           id={id}
           checked={checked}
           onCheckedChange={handleCheckboxClick}
           required={required}
-          className="mt-1"
+          className="h-5 w-5 rounded-md border-2 border-primary/20 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all duration-300 group-hover:border-primary/50"
         />
         <Label
           htmlFor={id}
-          className="text-sm leading-relaxed cursor-pointer"
+          className="text-sm font-medium leading-none cursor-pointer flex items-center gap-1.5 transition-colors duration-300 group-hover:text-primary"
         >
           {label}
           {termsUrl && (
@@ -80,82 +95,84 @@ export default function ConsentCheckbox({
                 e.preventDefault();
                 setIsDialogOpen(true);
               }}
-              className="text-primary-cta hover:underline ml-1 inline-flex items-center gap-1"
+              className="text-primary hover:text-blue-700 transition-colors ml-1 p-1 hover:bg-primary/5 rounded"
             >
-              <FileText className="h-3 w-3" />
-              View Terms
+              <ExternalLink className="h-3 w-3" />
             </button>
           )}
         </Label>
       </div>
 
-      {termsUrl && (
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Terms and Conditions
-              </DialogTitle>
-              <DialogDescription>
-                Please read the terms and conditions carefully before proceeding.
-              </DialogDescription>
-            </DialogHeader>
-            <div
-              className="flex-1 overflow-y-auto border rounded-lg p-6 bg-muted/30 min-h-[400px] max-h-[60vh]"
-              onScroll={handleScroll}
-            >
-              <div className="prose prose-sm max-w-none">
-                <h3 className="text-lg font-semibold mb-4">Terms and Conditions</h3>
-                <p className="mb-4">
-                  By proceeding with this account opening application, you agree to the following terms and conditions:
-                </p>
-                <ol className="list-decimal list-inside space-y-3 mb-4">
-                  <li>You confirm that all information provided is accurate and complete.</li>
-                  <li>You authorize HDFC Bank to verify the information provided through various sources including HRMS, KYC agencies, and credit bureaus.</li>
-                  <li>You understand that the bank reserves the right to reject the application at its sole discretion.</li>
-                  <li>You agree to maintain a minimum balance as per the account type requirements.</li>
-                  <li>You consent to receive communications via SMS, email, and phone regarding your account.</li>
-                  <li>You understand that the bank may share your information with third parties as per regulatory requirements.</li>
-                  <li>You agree to comply with all banking regulations and terms of service.</li>
-                  <li>You confirm that you are eligible to open a salary account as per the bank's policies.</li>
-                  <li>You understand that any false information may lead to account closure and legal action.</li>
-                  <li>You agree to notify the bank immediately of any changes to your employment status or personal information.</li>
-                </ol>
-                <p className="mb-4">
-                  For complete terms and conditions, please visit: <a href={termsUrl} target="_blank" rel="noopener noreferrer" className="text-primary-cta hover:underline">HDFC Bank Terms & Conditions</a>
-                </p>
-                <div className="h-20"></div>
-              </div>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-8 border-none shadow-2xl rounded-3xl overflow-hidden glass">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-blue-400" />
+          <DialogHeader className="space-y-4 mb-6">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-2">
+              <FileText className="w-6 h-6 text-primary" />
             </div>
-            <DialogFooter className="flex items-center justify-between">
-              <p className="text-xs text-text-gray-1">
-                {hasScrolledToBottom
-                  ? "✓ You have read all the content"
-                  : "Please scroll to the bottom to continue"}
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    setHasScrolledToBottom(false);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary-cta"
-                  onClick={handleConfirm}
-                  disabled={!hasScrolledToBottom}
-                >
-                  Confirm & Continue
-                </Button>
+            <div>
+              <DialogTitle className="text-2xl font-bold tracking-tight text-gradient">
+                {title}
+              </DialogTitle>
+              <DialogDescription className="text-base mt-2">
+                {description}
+              </DialogDescription>
+            </div>
+          </DialogHeader>
+          <div
+            className="flex-1 overflow-y-auto border border-border/50 rounded-2xl p-6 bg-background/50 backdrop-blur-sm scroll-smooth"
+            onScroll={handleScroll}
+          >
+            <div className="prose prose-blue prose-sm max-w-none space-y-4">
+              <p className="font-semibold text-primary">Key Highlights of Your Agreement:</p>
+              <div className="grid gap-4">
+                {content.map((text, idx) => (
+                  <div key={idx} className="flex gap-3 items-start p-3 rounded-xl bg-white/50 border border-white shadow-sm transition-all hover:scale-[1.01]">
+                    <div className="w-5 h-5 rounded-full bg-primary/10 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-primary">
+                      {idx + 1}
+                    </div>
+                    <p className="text-sm text-foreground/80 leading-snug">{text}</p>
+                  </div>
+                ))}
               </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+              <div className="h-20" />
+            </div>
+          </div>
+          <DialogFooter className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-6 border-t border-border/30">
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "w-2 h-2 rounded-full transition-all duration-300",
+                hasScrolledToBottom ? "bg-success scale-125" : "bg-muted-foreground/30 animate-pulse"
+              )} />
+              <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                {hasScrolledToBottom
+                  ? "Read Confirmed"
+                  : "Scroll to verify"}
+              </p>
+            </div>
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button
+                variant="ghost"
+                className="rounded-xl flex-1 sm:flex-none font-bold text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  setIsDialogOpen(false);
+                  setHasScrolledToBottom(false);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary-cta"
+                className="rounded-xl flex-1 sm:flex-none font-bold px-8 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
+                onClick={handleConfirm}
+                disabled={!hasScrolledToBottom}
+              >
+                Confirm & Agree
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

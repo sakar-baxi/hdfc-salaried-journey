@@ -10,43 +10,54 @@ export default function Sidebar() {
   const { journeySteps, currentStepIndex } = useJourney();
 
   return (
-    // --- MODIFIED: Set to bg-card (white) with a border ---
-    <aside className="hidden md:block w-72 bg-card text-foreground p-8 fixed top-0 left-0 h-screen border-r border-border">
-      <h1 className="text-2xl font-bold mb-10 text-primary">
-        HDFC Bank
-      </h1>
+    <aside className="hidden md:block w-72 bg-card/80 backdrop-blur-xl text-foreground p-8 fixed top-0 left-0 h-screen border-r border-border/50 shadow-premium">
+      <div className="flex items-center gap-2 mb-12">
+        <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-primary/10">
+          H
+        </div>
+        <h1 className="text-2xl font-bold tracking-tight text-gradient">
+          HDFC Bank
+        </h1>
+      </div>
       <nav>
-        {/* --- MODIFIED: Border is now a subtle gray --- */}
-        <ol className="relative border-l border-border/50">
+        <ol className="relative border-l-2 border-primary/10 space-y-6">
           {journeySteps.map((step, index) => {
             const isCompleted = index < currentStepIndex;
             const isCurrent = index === currentStepIndex;
 
             const Icon = isCompleted ? CheckCircle : isCurrent ? CircleDot : Circle;
-            
+
             return (
-              <li key={step.id} className="mb-8 ml-6">
+              <li key={step.id} className="relative pl-8">
                 <span className={cn(
-                  "absolute -left-[13px] flex items-center justify-center w-6 h-6 rounded-full ring-4 ring-card",
-                  // --- MODIFIED: Use the NEW bright blue accent ---
-                  isCompleted ? "bg-primary-cta" :
-                  isCurrent ? "bg-primary-cta" : "bg-muted"
+                  "absolute -left-[13px] top-1 flex items-center justify-center w-6 h-6 rounded-full transition-all duration-300",
+                  isCompleted ? "bg-primary shadow-lg shadow-primary/30" :
+                    isCurrent ? "bg-primary animate-pulse shadow-lg shadow-primary/30" : "bg-muted ring-2 ring-background text-muted-foreground"
                 )}>
-                  <Icon 
+                  <Icon
                     className={cn(
-                      // --- MODIFIED: Use white on the blue bg ---
-                      isCompleted ? "text-white" :
-                      isCurrent ? "text-white" : "text-muted-foreground",
-                      "w-4 h-4"
-                    )} 
+                      isCompleted || isCurrent ? "text-white" : "text-muted-foreground",
+                      "w-3.5 h-3.5"
+                    )}
                   />
                 </span>
-                <h3 className={cn(
-                  "font-semibold",
-                  isCurrent ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {step.title}
-                </h3>
+                <div className="flex flex-col">
+                  <span className={cn(
+                    "text-xs font-bold uppercase tracking-widest mb-1 transition-colors duration-300",
+                    isCurrent ? "text-primary" : "text-muted-foreground/60"
+                  )}>
+                    Step {index + 1}
+                  </span>
+                  <h3 className={cn(
+                    "font-bold transition-all duration-300",
+                    isCurrent ? "text-foreground transform translate-x-1" : "text-muted-foreground"
+                  )}>
+                    {step.title}
+                  </h3>
+                </div>
+                {isCurrent && (
+                  <div className="absolute left-0 top-0 w-1 h-full bg-primary rounded-r-full -ml-8" />
+                )}
               </li>
             );
           })}

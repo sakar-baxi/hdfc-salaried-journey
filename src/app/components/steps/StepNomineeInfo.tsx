@@ -7,7 +7,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Users, Heart, ArrowRight, ShieldCheck } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 const RELATIONSHIPS = [
   { code: 1, value: "Mother" },
@@ -21,7 +23,6 @@ const RELATIONSHIPS = [
 export default function StepNomineeInfo() {
   const { nextStep } = useJourney();
   const [maritalStatus] = useState<string>("1"); // From previous step - Single
-  // Prefilled demo data based on marital status
   const [nomineeName, setNomineeName] = useState(maritalStatus === "1" ? "Jane Doe" : "Spouse Name");
   const [nomineeRelationship, setNomineeRelationship] = useState<string>(maritalStatus === "1" ? "1" : "3");
 
@@ -30,73 +31,84 @@ export default function StepNomineeInfo() {
   }, []);
 
   const handleContinue = () => {
-    trackEvent('form_submitted_nominee_info', { 
+    trackEvent('form_submitted_nominee_info', {
       hasNominee: true,
-      relationship: nomineeRelationship 
+      relationship: nomineeRelationship
     });
     nextStep();
   };
 
   return (
-    <Card className="w-full max-w-2xl border-none md:border md:shadow-professional md:rounded-xl mx-auto bg-card min-h-[500px] flex flex-col">
-      <CardHeader>
-        <CardTitle className="text-text-darkest text-2xl font-bold">Nominee Information</CardTitle>
-        <CardDescription className="text-base">
-          Please provide nominee details. This section is mandatory and cannot be removed.
-        </CardDescription>
+    <Card className="w-full max-w-4xl border-none md:border md:shadow-premium md:rounded-3xl mx-auto bg-card/60 backdrop-blur-xl overflow-hidden min-h-[500px] flex flex-col">
+      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-blue-400 to-primary/50" />
+      <CardHeader className="space-y-4 pb-8 pt-10 px-10">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center ring-1 ring-primary/20">
+            <Users className="w-7 h-7 text-primary" />
+          </div>
+          <div>
+            <CardTitle className="text-3xl font-bold tracking-tight text-gradient">Contact Details</CardTitle>
+            <CardDescription className="text-lg">
+              Nominate a family member for your account security.
+            </CardDescription>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-4 flex-1">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-          <p className="text-xs text-blue-800">
-            <strong>Note:</strong> Based on your marital status ({maritalStatus === "1" ? "Single" : "Married"}), 
-            we've pre-filled the nominee as {maritalStatus === "1" ? "Mother" : "Spouse"}. You can update if needed.
+
+      <CardContent className="px-10 pb-10 space-y-10 flex-1">
+        <div className="p-8 rounded-3xl bg-blue-50/50 border border-blue-100/50 flex items-start gap-4">
+          <ShieldCheck className="w-10 h-10 text-primary shrink-0" />
+          <p className="text-sm text-slate-700 font-medium leading-relaxed">
+            Based on your profile, we've pre-filled
+            <span className="text-primary font-bold mx-1">Jane Doe (Mother)</span>
+            as your nominee. You can keep this or update it to any other family member.
           </p>
         </div>
-        
-        <div className="space-y-2">
-          <Label htmlFor="nomineeName">Nominee Name *</Label>
-          <Input
-            id="nomineeName"
-            value={nomineeName}
-            onChange={(e) => setNomineeName(e.target.value)}
-            placeholder="Enter nominee name"
-            required
-            className="h-11"
-          />
-          <p className="text-xs text-text-gray-1">
-            Pre-filled based on your marital status. You can edit if needed.
-          </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <Label htmlFor="nomineeName" className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
+              <Heart className="w-3 h-3" /> Nominee Full Name *
+            </Label>
+            <Input
+              id="nomineeName"
+              value={nomineeName}
+              onChange={(e) => setNomineeName(e.target.value)}
+              placeholder="Enter nominee name"
+              required
+              className="h-14 bg-white border-none shadow-premium-sm focus:ring-2 focus:ring-primary/20 rounded-2xl px-5 text-lg font-medium"
+            />
+          </div>
+
+          <div className="space-y-3">
+            <Label htmlFor="nomineeRelationship" className="text-sm font-semibold text-muted-foreground">Relationship *</Label>
+            <Select
+              value={nomineeRelationship}
+              onValueChange={setNomineeRelationship}
+            >
+              <SelectTrigger id="nomineeRelationship" className="h-14 bg-white border-none shadow-premium-sm focus:ring-2 focus:ring-primary/20 rounded-2xl px-5 text-lg font-medium">
+                <SelectValue placeholder="Select relationship" />
+              </SelectTrigger>
+              <SelectContent className="rounded-2xl border-none shadow-premium">
+                {RELATIONSHIPS.map(item => (
+                  <SelectItem key={item.code} value={String(item.code)} className="rounded-xl">
+                    {item.value}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="nomineeRelationship">Relationship *</Label>
-          <Select 
-            value={nomineeRelationship} 
-            onValueChange={setNomineeRelationship}
-          >
-            <SelectTrigger id="nomineeRelationship" className="h-11">
-              <SelectValue placeholder="Select relationship" />
-            </SelectTrigger>
-            <SelectContent>
-              {RELATIONSHIPS.map(item => (
-                <SelectItem key={item.code} value={String(item.code)}>
-                  {item.value}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <p className="text-xs text-text-gray-1 italic">
-          Note: Nominee section is mandatory and cannot be removed.
-        </p>
       </CardContent>
-      <CardFooter>
-        <Button 
-          variant="primary-cta" 
-          className="w-full h-12 text-base font-semibold" 
+
+      <CardFooter className="px-10 pb-12 pt-0">
+        <Button
+          variant="primary-cta"
+          className="w-full md:w-64 mx-auto h-14 text-lg font-bold shadow-xl shadow-primary/20 rounded-full hover:scale-[1.02] transition-all active:scale-[0.98] gap-3"
           onClick={handleContinue}
           disabled={!nomineeName || !nomineeRelationship}
         >
-          Continue
+          Proceed to Offers <ArrowRight className="w-5 h-5" />
         </Button>
       </CardFooter>
     </Card>

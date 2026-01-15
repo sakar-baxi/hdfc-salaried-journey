@@ -2,21 +2,16 @@
 
 import StepWelcome from "@/app/components/steps/StepWelcome";
 import StepJourneySelection from "@/app/components/steps/StepJourneySelection";
-import StepEkycHandler from "@/app/components/steps/StepEkycHandler";
 import StepCombinedDetails from "@/app/components/steps/StepCombinedDetails";
 import StepKycChoice from "@/app/components/steps/StepKycChoice";
-import StepConvertAccount from "@/app/components/steps/StepConvertAccount";
-import StepComplete from "@/app/components/steps/StepComplete";
-import StepPhysicalKyc from "@/app/components/steps/StepPhysicalKyc";
-import StepKycInstructions from "@/app/components/steps/StepKycInstructions";
-import StepKycFace from "@/app/components/steps/StepKycFace";
-import StepKycPan from "@/app/components/steps/StepKycPan";
-import StepKycPanFace from "@/app/components/steps/StepKycPanFace";
-import StepKycLoading from "@/app/components/steps/StepKycLoading";
-import StepAccountAuth from "@/app/components/steps/StepAccountAuth";
-import StepLoanOffer from "@/app/components/steps/StepLoanOffer";
+import StepContactDetails from "@/app/components/steps/StepContactDetails";
 import StepEmploymentInfo from "@/app/components/steps/StepEmploymentInfo";
-import StepNomineeInfo from "@/app/components/steps/StepNomineeInfo";
+import StepKycDetails from "@/app/components/steps/StepKycDetails";
+import StepComplete from "@/app/components/steps/StepComplete";
+import StepVideoKyc from "@/app/components/steps/StepVideoKyc";
+import StepEkycHandler from "@/app/components/steps/StepEkycHandler";
+import StepPhysicalKyc from "@/app/components/steps/StepPhysicalKyc";
+import StepAccountConversion from "@/app/components/steps/StepAccountConversion";
 
 export type UserType = "ntb" | "etb-no-acct" | "etb-with-acct";
 export type JourneyType = "journey1" | "journey2" | "journey3";
@@ -28,40 +23,28 @@ export interface Step {
 
 export const ALL_STEPS: Record<string, Step> = {
   journeySelection: { id: "journeySelection", title: "Select Journey" },
-  welcome: { id: "welcome", title: "Mobile Verification" },
-  ekycHandler: { id: "ekycHandler", title: "Aadhaar EKYC" },
-  combinedDetails: { id: "combinedDetails", title: "Your Details" },
-  kycChoice: { id: "kycChoice", title: "KYC Choice" },
-  convertAccount: { id: "convertAccount", title: "Convert Account" },
-  accountAuth: { id: "accountAuth", title: "Account Authentication" },
-  physicalKyc: { id: "physicalKyc", title: "Application Saved" },
-  kycInstructions: { id: "kycInstructions", title: "Video KYC" },
-  kycFace: { id: "kycFace", title: "Face Capture" },
-  kycPan: { id: "kycPan", title: "PAN Capture" },
-  kycPanFace: { id: "kycPanFace", title: "Final Proof" },
-  kycLoading: { id: "kycLoading", title: "Verifying KYC" },
-  employmentInfo: { id: "employmentInfo", title: "Employment Information" },
-  nomineeInfo: { id: "nomineeInfo", title: "Nominee Information" },
-  loanOffer: { id: "loanOffer", title: "Pre-approved Loan" },
-  complete: { id: "complete", title: "Account Created" },
+  welcome: { id: "welcome", title: "Identify Yourself" },
+  kycChoice: { id: "kycChoice", title: "Select KYC" },
+  contactDetails: { id: "contactDetails", title: "Contact Details" },
+  combinedDetails: { id: "combinedDetails", title: "Your Profile" },
+  employmentInfo: { id: "employmentInfo", title: "Your Info" },
+  kycDetails: { id: "kycDetails", title: "KYC Details" },
+  videoKyc: { id: "videoKyc", title: "Video KYC" },
+  accountConversion: { id: "accountConversion", title: "Convert Account" },
+  complete: { id: "complete", title: "Submitted" },
 };
 
 export const STEP_COMPONENTS: Record<string, React.ComponentType> = {
   journeySelection: StepJourneySelection,
   welcome: StepWelcome,
-  ekycHandler: StepEkycHandler,
-  combinedDetails: StepCombinedDetails,
   kycChoice: StepKycChoice,
-  convertAccount: StepConvertAccount,
-  accountAuth: StepAccountAuth,
-  complete: StepComplete,
-  physicalKyc: StepPhysicalKyc,
-  kycInstructions: StepKycInstructions,
-  kycFace: StepKycFace,
-  kycPan: StepKycPan,
-  kycPanFace: StepKycPanFace,
-  kycLoading: StepKycLoading,
+  contactDetails: StepContactDetails,
+  combinedDetails: StepCombinedDetails,
   employmentInfo: StepEmploymentInfo,
-  nomineeInfo: StepNomineeInfo,
-  loanOffer: StepLoanOffer,
+  kycDetails: StepKycDetails,
+  videoKyc: StepVideoKyc,
+  complete: StepComplete,
+  ekycHandler: StepEkycHandler,
+  physicalKyc: StepPhysicalKyc,
+  accountConversion: StepAccountConversion,
 };

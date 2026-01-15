@@ -1,68 +1,43 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Smartphone, MessageSquare, Mail, Phone, Minimize2, Bell, Send } from "lucide-react";
+import { X, Smartphone, MessageSquare, Minimize2, Bell, Send, Wifi, Battery, Mail, Phone } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface MobileMockDrawerProps {
-  otp?: string;
-  messages?: Array<{ type: "sms" | "email" | "whatsapp"; content: string; timestamp: string }>;
-  journeyLink?: string;
-}
-
-export default function MobileMockDrawer({ otp, messages = [], journeyLink }: MobileMockDrawerProps) {
+export default function MobileMockDrawer() {
+  const { notifications, journeySteps, currentStepIndex, addNotification, clearNotifications } = useJourney();
   const [isOpen, setIsOpen] = useState(true);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [nudges, setNudges] = useState([
-    { id: 1, name: "Initial Link", sent: true, timestamp: new Date().toLocaleTimeString() },
-    { id: 2, name: "Nudge 1", sent: false, timestamp: null },
-    { id: 3, name: "Nudge 2", sent: false, timestamp: null },
-    { id: 4, name: "Nudge 3", sent: false, timestamp: null },
-  ]);
-  const [hasNewNudge, setHasNewNudge] = useState(false);
+  const [activeNudge, setActiveNudge] = useState<string | null>(null);
+  const [lastNotifCount, setLastNotifCount] = useState(notifications.length);
 
-  const sendNudge = (nudgeId: number) => {
-    const nudge = nudges.find(n => n.id === nudgeId);
-    if (nudge && !nudge.sent) {
-      setNudges(prev => prev.map(n => 
-        n.id === nudgeId 
-          ? { ...n, sent: true, timestamp: new Date().toLocaleTimeString() }
-          : n
-      ));
-      setHasNewNudge(true);
-      setTimeout(() => setHasNewNudge(false), 3000);
+  useEffect(() => {
+    if (notifications.length > lastNotifCount) {
+      const latest = notifications[0];
+      setActiveNudge(latest.title);
+      const timer = setTimeout(() => setActiveNudge(null), 5000);
+      setLastNotifCount(notifications.length);
+      return () => clearTimeout(timer);
     }
-  };
-
-  const mockMessages = [
-    ...messages,
-    ...(otp ? [{
-      type: "sms" as const,
-      content: `Your HDFC OTP is ${otp}. Valid for 5 minutes.`,
-      timestamp: new Date().toLocaleTimeString()
-    }] : []),
-    ...(journeyLink ? [{
-      type: "whatsapp" as const,
-      content: `Start your salary account journey: ${journeyLink}`,
-      timestamp: new Date().toLocaleTimeString()
-    }] : []),
-    ...(nudges.filter(n => n.sent && n.id > 1).map(n => ({
-      type: "sms" as const,
-      content: `Reminder: Complete your HDFC salary account journey. ${journeyLink || ''}`,
-      timestamp: n.timestamp || new Date().toLocaleTimeString()
-    })))
-  ];
+  }, [notifications, lastNotifCount]);
 
   if (!isOpen) {
     return (
       <Button
         onClick={() => setIsOpen(true)}
-        className="hidden md:flex fixed bottom-4 right-4 z-50 rounded-full h-14 w-14 shadow-lg"
-        variant="primary-cta"
+        className="fixed bottom-4 right-4 z-[60] rounded-full h-16 w-16 shadow-2xl bg-[#0047CC] hover:bg-[#0037AA] text-white"
+        variant="default"
       >
-        <Smartphone className="h-5 w-5" />
+        <Smartphone className="h-8 w-8" />
+        {notifications.length > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-full border-2 border-white">
+            {notifications.length}
+          </span>
+        )}
       </Button>
     );
   }
@@ -70,196 +45,207 @@ export default function MobileMockDrawer({ otp, messages = [], journeyLink }: Mo
   return (
     <div
       className={cn(
-        "hidden md:block fixed right-0 top-0 h-full w-96 bg-background border-l shadow-2xl z-50 transition-transform duration-300",
-        isMinimized ? "translate-y-[calc(100%-60px)]" : "translate-y-0"
+        "hidden md:block fixed right-0 top-0 h-full w-[400px] bg-white border-l shadow-2xl z-[60] transition-all duration-500 ease-in-out",
+        isMinimized ? "translate-x-[340px] opacity-50" : "translate-x-0"
       )}
     >
       <div className="h-full flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-card">
+        {/* Header/Control Bar */}
+        <div className="flex items-center justify-between p-4 border-b bg-slate-50">
+          <button
+            onClick={() => setIsMinimized(!isMinimized)}
+            className="flex items-center gap-2 group"
+          >
+            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            {!isMinimized && (
+              <div className="text-left">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Device Preview</p>
+                <p className="text-sm font-black text-slate-800 tracking-tight">iPhone 15 Pro</p>
+              </div>
+            )}
+          </button>
+
           <div className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5 text-primary-cta" />
-            <CardTitle className="text-sm font-semibold">Mobile Preview</CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMinimized(!isMinimized)}
-              className="h-8 w-8 p-0"
-            >
-              <Minimize2 className="h-4 w-4" />
-            </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 p-0"
+              className="h-10 w-10 p-0 rounded-full hover:bg-red-50 hover:text-red-500"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
         {!isMinimized && (
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            {/* Phone Mock - Actual Phone Design */}
-            <div className="mx-auto w-64 bg-black rounded-[2.5rem] p-2 shadow-2xl">
-              {/* Phone Frame */}
-              <div className="bg-white rounded-[2rem] overflow-hidden">
-                {/* Notch */}
-                <div className="h-6 bg-black rounded-t-[2rem] flex items-center justify-center">
-                  <div className="w-32 h-4 bg-black rounded-b-2xl"></div>
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-100/50">
+            {/* Real Phone Mockup */}
+            <div className="mx-auto w-[280px] bg-slate-900 rounded-[3.5rem] p-3 shadow-[0_0_50px_rgba(0,0,0,0.2)] relative border-[6px] border-slate-800">
+
+              {/* Inner Screen */}
+              <div className="bg-[#f0f2f5] rounded-[2.8rem] h-[580px] overflow-hidden relative flex flex-col">
+
+                {/* Dynamic Island / Notch */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2 w-24 h-6 bg-black rounded-full z-30 flex items-center justify-center">
+                  <div className="w-1 h-1 bg-blue-900 rounded-full ml-10 opacity-30" />
                 </div>
-                
-                {/* Screen */}
-                <div className="bg-gradient-to-br from-gray-50 to-gray-100 min-h-[500px] p-3">
-                  {/* Status Bar */}
-                  <div className="flex justify-between items-center text-xs text-gray-600 mb-2">
-                    <span>9:41</span>
-                    <div className="flex gap-1">
-                      <div className="w-4 h-2 border border-gray-600 rounded-sm"></div>
-                      <div className="w-6 h-3 border-2 border-gray-600 rounded-sm"></div>
-                    </div>
-                  </div>
 
-                  {/* Messages App UI */}
-                  <div className="space-y-3">
-                    {/* HDFC Bank Header */}
-                    <div className="bg-primary-cta text-white rounded-lg p-3 text-center">
-                      <p className="font-semibold text-sm">HDFC Bank</p>
-                    </div>
-
-                    {/* OTP Display */}
-                    {otp && (
-                      <div className="bg-white border-2 border-primary-cta rounded-lg p-4 shadow-md">
-                        <p className="text-xs text-gray-600 mb-2">OTP from HDFC Bank</p>
-                        <p className="text-3xl font-mono font-bold text-primary-cta tracking-widest text-center">
-                          {otp}
-                        </p>
-                        <p className="text-xs text-gray-500 text-center mt-2">Valid for 5 minutes</p>
-                      </div>
-                    )}
-
-                    {/* SMS Messages */}
-                    {mockMessages.filter(m => m.type === "sms").map((msg, idx) => (
-                      <div key={idx} className="bg-gray-200 rounded-lg p-3 relative">
-                        {idx === mockMessages.filter(m => m.type === "sms").length - 1 && hasNewNudge && (
-                          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                        )}
-                        <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare className="h-4 w-4 text-gray-600" />
-                          <span className="text-xs text-gray-600 font-semibold">HDFC Bank</span>
-                          <span className="text-xs text-gray-500 ml-auto">{msg.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-800">{msg.content}</p>
-                      </div>
-                    ))}
-
-                    {/* WhatsApp Messages */}
-                    {mockMessages.filter(m => m.type === "whatsapp").map((msg, idx) => (
-                      <div key={idx} className="bg-green-100 rounded-lg p-3">
-                        <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare className="h-4 w-4 text-green-600" />
-                          <span className="text-xs text-green-700 font-semibold">WhatsApp</span>
-                          <span className="text-xs text-gray-500 ml-auto">{msg.timestamp}</span>
-                        </div>
-                        <p className="text-sm text-gray-800">{msg.content}</p>
-                        {journeyLink && (
-                          <a 
-                            href={journeyLink}
-                            className="text-xs text-blue-600 underline mt-1 block"
-                          >
-                            {journeyLink.substring(0, 30)}...
-                          </a>
-                        )}
-                      </div>
-                    ))}
-
-                    {/* Journey Link Info */}
-                    {journeyLink && (
-                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                        <p className="text-xs font-semibold text-yellow-800 mb-1">⚠️ Unique Link</p>
-                        <p className="text-xs text-yellow-700 break-all font-mono">
-                          {journeyLink}
-                        </p>
-                        <p className="text-xs text-yellow-600 mt-1">Non-editable</p>
-                      </div>
-                    )}
+                {/* Status Bar */}
+                <div className="h-10 flex justify-between items-center px-8 pt-2 relative z-20">
+                  <span className="text-[10px] font-bold text-slate-800">9:41</span>
+                  <div className="flex items-center gap-1.5 opacity-60">
+                    <Wifi className="w-3 h-3" />
+                    <Battery className="w-4 h-4" />
                   </div>
                 </div>
 
-                {/* Home Indicator */}
-                <div className="h-1 bg-black rounded-full w-32 mx-auto mb-2"></div>
+                {/* Lock Screen Notification (Push) */}
+                <AnimatePresence>
+                  {activeNudge && (
+                    <motion.div
+                      initial={{ y: -100, opacity: 0, scale: 0.9 }}
+                      animate={{ y: 12, opacity: 1, scale: 1 }}
+                      exit={{ y: -100, opacity: 0, scale: 0.9 }}
+                      className="absolute top-0 left-4 right-4 z-[40] bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-lg border border-white/50 flex items-center gap-4"
+                    >
+                      <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shrink-0">
+                        <img src="https://www.hdfcbank.com/content/api/contentstream-id/723fb80a-2dde-42a3-9793-7ae1be57c87f/297c88c7-24a3-41c1-9257-268e3981881a?" className="w-6 invert" alt="HDFC" />
+                      </div>
+                      <div className="flex-1 overflow-hidden">
+                        <p className="text-[10px] font-black text-primary uppercase">HDFC Bank</p>
+                        <p className="text-xs font-bold text-slate-800 truncate">{notifications[0].body}</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Screen Content - Messages List */}
+                <div className="flex-1 overflow-y-auto p-4 pt-12 space-y-4 scrollbar-hide bg-slate-100">
+                  <div className="text-center py-4">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-white/50 px-3 py-1 rounded-full">Today</span>
+                  </div>
+
+                  {notifications.map((notif, idx) => {
+                    const hasLink = notif.body.includes('http');
+                    const textParts = notif.body.split(/https?:\/\/\S+/);
+
+                    return (
+                      <motion.div
+                        key={notif.id}
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: idx * 0.1 }}
+                        className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200/50 space-y-2 relative group"
+                      >
+                        <div className="flex items-center justify-between border-b border-slate-50 pb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-5 h-5 bg-primary rounded-md flex items-center justify-center">
+                              <MessageSquare className="w-3 h-3 text-white" />
+                            </div>
+                            <span className="text-[10px] font-black text-slate-800">{notif.title}</span>
+                          </div>
+                          <span className="text-[9px] font-bold text-slate-400">{notif.timestamp}</span>
+                        </div>
+                        <p className="text-[11px] leading-relaxed text-slate-600 font-medium whitespace-pre-wrap">
+                          {textParts[0]}
+                          {hasLink && (
+                            <button
+                              onClick={() => {
+                                window.location.href = '/?resume=true';
+                              }}
+                              className="text-primary font-black underline hover:text-blue-700 ml-1"
+                            >
+                              Link
+                            </button>
+                          )}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                {/* Home bar */}
+                <div className="h-10 flex items-center justify-center pb-2">
+                  <div className="w-20 h-1 bg-slate-300 rounded-full" />
+                </div>
               </div>
             </div>
 
             {/* Nudge Management */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Bell className="h-4 w-4" />
-                  Nudge Management
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {nudges.map((nudge) => (
-                  <div 
-                    key={nudge.id} 
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+            <Card className="border-none shadow-premium bg-white rounded-[2rem] overflow-hidden mb-6">
+              <div className="bg-slate-900 p-4 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-amber-400" />
+                  <span className="text-[10px] font-black uppercase tracking-widest">Nudge Desk</span>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={clearNotifications}
+                  className="h-6 px-2 text-[10px] font-bold text-slate-400 hover:text-white"
+                >
+                  Clear all
+                </Button>
+              </div>
+              <CardContent className="p-4 space-y-4">
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    onClick={() => addNotification("HDFC Bank", "SMS: Please complete your HDFC Bank journey. Click to resume: https://hdfc-bank.com/?resume=true")}
+                    className="flex-1 h-16 flex-col gap-1 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border-none shadow-sm"
                   >
-                    <div className="flex-1">
-                      <p className="text-xs font-medium">{nudge.name}</p>
-                      {nudge.sent && nudge.timestamp && (
-                        <p className="text-xs text-text-gray-1">Sent at {nudge.timestamp}</p>
-                      )}
-                    </div>
-                    {nudge.sent ? (
-                      <span className="text-xs font-semibold text-green-600">✓ Sent</span>
-                    ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => sendNudge(nudge.id)}
-                        className="h-7 text-xs"
-                      >
-                        <Send className="h-3 w-3 mr-1" />
-                        Send
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                {hasNewNudge && (
-                  <div className="p-2 bg-green-100 border border-green-300 rounded-lg animate-pulse">
-                    <p className="text-xs text-green-800 font-semibold flex items-center gap-1">
-                      <Bell className="h-3 w-3" />
-                      New nudge sent! Check phone notifications.
-                    </p>
-                  </div>
-                )}
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="text-[9px] font-bold">SMS</span>
+                  </Button>
+                  <Button
+                    onClick={() => addNotification("HDFC Bank", "WhatsApp: Your account is waiting. Click to resume: https://wa.me/hdfc?resume=true")}
+                    className="flex-1 h-16 flex-col gap-1 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-none shadow-sm"
+                  >
+                    <Phone className="w-4 h-4" />
+                    <span className="text-[9px] font-bold">WhatsApp</span>
+                  </Button>
+                  <Button
+                    onClick={() => addNotification("HDFC Bank", "Email: Final reminder to complete your KYC. https://hdfc-bank.com/resume?true")}
+                    className="flex-1 h-16 flex-col gap-1 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-none shadow-sm"
+                  >
+                    <Mail className="w-4 h-4" />
+                    <span className="text-[9px] font-bold">Email</span>
+                  </Button>
+                </div>
+
+                <Button
+                  onClick={() => {
+                    addNotification("HDFC Bank", "Omnichannel Nudge sent successfully.");
+                  }}
+                  className="w-full h-10 rounded-lg bg-[#0047CC] hover:bg-[#0037AA] text-white text-xs font-bold gap-2"
+                >
+                  <Send className="w-3 h-3" /> Nudge Everywhere
+                </Button>
               </CardContent>
             </Card>
 
-            {/* Link Info */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-sm">Link Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-xs">
-                <div>
-                  <span className="text-text-gray-1">Method:</span>
-                  <span className="ml-2 font-semibold">SMS / Email / WhatsApp</span>
+            {/* Current Step Info */}
+            <Card className="border-none shadow-premium bg-white overflow-hidden rounded-[2rem]">
+              <div className="bg-[#002D72] p-4 text-white">
+                <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest">Active Step</p>
+                <p className="text-lg font-black">{journeySteps[currentStepIndex]?.title}</p>
+              </div>
+              <CardContent className="p-6 space-y-4 font-medium text-slate-600 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Real-time session active</span>
                 </div>
-                <div>
-                  <span className="text-text-gray-1">Status:</span>
-                  <span className="ml-2 font-semibold text-green-600">Active</span>
-                </div>
-                <div>
-                  <span className="text-text-gray-1">Opened via:</span>
-                  <span className="ml-2 font-semibold">Initial</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span>Cross-device sync enabled</span>
                 </div>
               </CardContent>
             </Card>
+
+            <div className="text-center pt-4">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em]">HDFC Bank Secure Node</p>
+            </div>
           </div>
         )}
       </div>

@@ -8,42 +8,54 @@ import type { Step, UserType, JourneyType } from "./stepDefinitions";
 
 
 // --- 1. Types ---
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  timestamp: string;
+}
+
 interface JourneyState {
   userType: UserType;
   journeyType: JourneyType | null;
   currentStepIndex: number;
   journeySteps: Step[];
-  CurrentStepComponent: React.ComponentType; // The component for the *main flow*
-  currentBranchComponent: React.ComponentType | null; // The component for *branches*
+  CurrentStepComponent: React.ComponentType;
+  currentBranchComponent: React.ComponentType | null;
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (stepId: string) => void;
   setUserType: (type: UserType) => void;
   setJourneyType: (type: JourneyType) => void;
   resetJourney: () => void;
+  notifications: Notification[];
+  addNotification: (title: string, body: string) => void;
+  clearNotifications: () => void;
+  formData: Record<string, any>;
+  updateFormData: (data: Record<string, any>) => void;
+  isResumeFlow: boolean;
 }
 
 // --- 2. Journey Logic ---
 const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
   let stepIds: string[] = [];
-  
+
   switch (journeyType) {
-    case "journey1": // eKYC only
-      stepIds = ["welcome", "ekycHandler", "complete"];
+    case "journey1": // Compact
+      stepIds = ["welcome", "kycChoice", "kycDetails", "videoKyc", "complete"];
       break;
-    case "journey2": // SAJ (Salary Account Journey) - Standard Journey NTB
-      stepIds = ["welcome", "kycChoice", "combinedDetails", "employmentInfo", "nomineeInfo", "loanOffer", "complete"];
+    case "journey2": // Standard Salary Account Journey (Full Flow)
+      stepIds = ["welcome", "kycChoice", "contactDetails", "kycDetails", "videoKyc", "complete"];
       break;
-    case "journey3": // Direct conversion
-      stepIds = ["welcome", "convertAccount", "accountAuth", "complete"];
+    case "journey3": // Direct Conversion / Existing Account (Express Flow)
+      stepIds = ["welcome", "accountConversion", "complete"];
       break;
   }
-  
+
   return stepIds.map(id => ALL_STEPS[id]).filter(Boolean);
 };
 
 const getInitialStepsForUserType = (userType: UserType): Step[] => {
-  // Default to Journey 2 (SAJ) - Standard Journey NTB
   return getInitialStepsForJourney("journey2");
 };
 
@@ -55,14 +67,49 @@ const LOCAL_STORAGE_PREFIX = "hdfcJourney_";
 
 export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   const [userType, _setUserType] = useState<UserType>("ntb");
-  const [journeyType, _setJourneyType] = useState<JourneyType | null>("journey2"); // Default to Journey 2
+  const [journeyType, _setJourneyType] = useState<JourneyType | null>("journey3"); // Default to Journey 3 (Express)
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
-  const [journeySteps, _setJourneySteps] = useState<Step[]>(getInitialStepsForJourney("journey2"));
+  const [journeySteps, _setJourneySteps] = useState<Step[]>(getInitialStepsForJourney("journey3"));
   const [currentBranchComponent, _setCurrentBranchComponent] = useState<React.ComponentType | null>(null);
-  
+  const [notifications, setNotifications] = useState<Notification[]>([
+    {
+      id: "initial",
+      title: "HDFC Bank",
+      body: "Welcome! Start your premium salary account journey now.",
+      timestamp: "Just now"
+    }
+  ]);
+
+  const addNotification = useCallback((title: string, body: string) => {
+    const newNotif = {
+      id: Date.now().toString(),
+      title,
+      body,
+      timestamp: "Just now"
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  }, []);
+
+  const [formData, _setFormData] = useState<Record<string, any>>({});
+
+  const updateFormData = useCallback((newData: Record<string, any>) => {
+    _setFormData(prev => {
+      const updated = { ...prev, ...newData };
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`${LOCAL_STORAGE_PREFIX}formData`, JSON.stringify(updated));
+      }
+      return updated;
+    });
+  }, []);
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([]);
+  }, []);
+
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isResumeFlow, setIsResumeFlow] = useState(false);
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
-  
+
   // --- State-setting functions ---
   const setJourneySteps = useCallback((steps: Step[]) => {
     _setJourneySteps(steps);
@@ -70,7 +117,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       localStorage.setItem(`${LOCAL_STORAGE_PREFIX}journeySteps`, JSON.stringify(steps));
     }
   }, []);
-  
+
   const setStepIndex = useCallback((index: number) => {
     _setCurrentStepIndex(index);
     if (typeof window !== 'undefined') {
@@ -83,7 +130,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   // to prevent React from executing it.
   const setBranchComponent = useCallback((component: React.ComponentType | null) => {
     _setCurrentBranchComponent(() => component); // <-- THIS LINE IS THE FIX
-    
+
     if (typeof window !== 'undefined') {
       const stepId = Object.keys(STEP_COMPONENTS).find(key => STEP_COMPONENTS[key] === component);
       if (stepId) {
@@ -101,11 +148,17 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     }
     const newSteps = getInitialStepsForUserType(type);
     setJourneySteps(newSteps);
-    setStepIndex(0); 
+    setStepIndex(0);
     setBranchComponent(null); // Reset branch
   }, [setJourneySteps, setStepIndex, setBranchComponent]);
 
   const setJourneyType = useCallback((type: JourneyType) => {
+    // Only update and reset if the journey type is actually changing
+    // or if we haven't selected one yet.
+    if (journeyType === type) {
+      return;
+    }
+
     _setJourneyType(type);
     if (typeof window !== 'undefined') {
       localStorage.setItem(`${LOCAL_STORAGE_PREFIX}journeyType`, type);
@@ -114,7 +167,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     setJourneySteps(newSteps);
     setStepIndex(0);
     setBranchComponent(null);
-  }, [setJourneySteps, setStepIndex, setBranchComponent]);
+  }, [journeyType, setJourneySteps, setStepIndex, setBranchComponent]);
 
   const resetJourney = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -123,9 +176,11 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}stepIndex`);
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}journeySteps`);
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}branchStepId`);
+      localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}formData`);
     }
     _setUserType("ntb");
     _setJourneyType("journey2");
+    _setFormData({});
     const newSteps = getInitialStepsForJourney("journey2");
     _setJourneySteps(newSteps);
     _setCurrentStepIndex(0);
@@ -139,11 +194,11 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   }, [resetJourney]);
 
   useEffect(() => {
-    if (!isInitialized) return; 
+    if (!isInitialized) return;
     const events = ["mousemove", "keydown", "click", "touchstart"];
     const handleActivity = () => resetInactivityTimer();
     events.forEach(event => window.addEventListener(event, handleActivity));
-    resetInactivityTimer(); 
+    resetInactivityTimer();
     return () => {
       events.forEach(event => window.removeEventListener(event, handleActivity));
       if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
@@ -154,11 +209,16 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
+        const params = new URLSearchParams(window.location.search);
+        const isResumeUrl = params.get('resume') === 'true';
+        if (isResumeUrl) setIsResumeFlow(true);
+
         const savedUserType = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}userType`) as UserType | null;
         const savedJourneyType = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}journeyType`) as JourneyType | null;
         const savedStepIndex = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}stepIndex`);
         const savedJourneySteps = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}journeySteps`);
         const savedBranchStepId = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}branchStepId`);
+        const savedFormData = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}formData`);
 
         if (savedUserType && savedStepIndex !== null && savedJourneySteps) {
           const parsedSteps = JSON.parse(savedJourneySteps) as Step[];
@@ -168,14 +228,29 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
             _setUserType(savedUserType);
             if (savedJourneyType) _setJourneyType(savedJourneyType);
             _setJourneySteps(parsedSteps);
-            _setCurrentStepIndex(parsedIndex); 
-            
+            if (savedFormData) _setFormData(JSON.parse(savedFormData));
+
+            // If it's a resume URL, we force them to verify OTP first (index 0)
+            if (isResumeUrl) {
+              _setCurrentStepIndex(0);
+            } else {
+              _setCurrentStepIndex(parsedIndex);
+            }
+
             if (savedBranchStepId && STEP_COMPONENTS[savedBranchStepId]) {
               setBranchComponent(STEP_COMPONENTS[savedBranchStepId]);
             }
-          } else { resetJourney(); }
-        } else { _setJourneySteps(getInitialStepsForUserType("ntb")); }
-      } catch (error) { resetJourney(); }
+          } else {
+            resetJourney();
+          }
+        } else {
+          // If no saved session, ensure we are in a clean Journey 2 state
+          _setJourneyType("journey2");
+          _setJourneySteps(getInitialStepsForJourney("journey2"));
+        }
+      } catch (error) {
+        resetJourney();
+      }
       setIsInitialized(true);
     }
   }, [resetJourney, setBranchComponent]);
@@ -183,6 +258,24 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   // --- Navigation Functions ---
   const nextStep = () => {
     setBranchComponent(null); // Go back to main flow
+
+    // Check if we are in a resume flow at the first step
+    const params = new URLSearchParams(window.location.search);
+    const isResumeUrl = params.get('resume') === 'true';
+    const savedStepIndex = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}stepIndex`);
+
+    if (isResumeUrl && currentStepIndex === 0 && savedStepIndex) {
+      const targetIndex = parseInt(savedStepIndex, 10);
+      if (targetIndex > 0 && targetIndex < journeySteps.length) {
+        setStepIndex(targetIndex);
+        // Clean URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('resume');
+        window.history.replaceState({}, '', url);
+        return;
+      }
+    }
+
     if (currentStepIndex < journeySteps.length - 1) {
       setStepIndex(currentStepIndex + 1);
     }
@@ -201,7 +294,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       console.error(`Step "${stepId}" not found!`);
       return;
     }
-    
+
     const mainJourneyIndex = journeySteps.findIndex(s => s.id === stepId);
     if (mainJourneyIndex !== -1) {
       setBranchComponent(null);
@@ -211,11 +304,11 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const CurrentStepComponent = journeySteps[currentStepIndex] 
+  const CurrentStepComponent = journeySteps[currentStepIndex]
     ? STEP_COMPONENTS[journeySteps[currentStepIndex].id]
     : () => null;
 
-  if (!isInitialized) return null; 
+  if (!isInitialized) return null;
 
   return (
     <JourneyContext.Provider
@@ -232,6 +325,12 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
         setUserType,
         setJourneyType,
         resetJourney,
+        addNotification,
+        clearNotifications,
+        notifications,
+        formData,
+        updateFormData,
+        isResumeFlow,
       }}
     >
       {children}

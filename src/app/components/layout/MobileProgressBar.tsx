@@ -9,32 +9,32 @@ import { ALL_STEPS, STEP_COMPONENTS } from "@/app/context/stepDefinitions";
 export default function MobileProgressBar() {
   const { journeySteps, currentStepIndex, currentBranchComponent } = useJourney();
 
-  // If we are in a branch, we don't show progress.
-  // We'll show the title of the branch step instead.
   let title = journeySteps[currentStepIndex]?.title || "";
-  let progressPercentage = (currentStepIndex / (journeySteps.length - 1)) * 100;
+  let progressPercentage = ((currentStepIndex + 1) / journeySteps.length) * 100;
 
   if (currentBranchComponent) {
-    // Find the title of the branch component
     const branchStepId = Object.keys(STEP_COMPONENTS).find(
       key => STEP_COMPONENTS[key] === currentBranchComponent
     );
     if (branchStepId && ALL_STEPS[branchStepId]) {
       title = ALL_STEPS[branchStepId].title;
     }
-    progressPercentage = 100; // Show full progress during KYC branch
   }
 
   return (
-    // MODIFIED: Made navbar taller, added padding, shadow, and better text
-    <div className="md:hidden w-full fixed top-0 left-0 bg-card shadow-md h-16 z-40">
-      <div className="flex flex-col justify-center h-full px-4 pt-2">
-        <span className="text-sm font-semibold text-text-darkest">
-          {title}
-        </span>
-        <div className="w-full bg-gray-200 h-1 rounded-full mt-2">
+    <div className="md:hidden w-full fixed top-0 left-0 bg-card/80 backdrop-blur-xl border-b border-border/50 h-20 z-40 px-6 py-4">
+      <div className="flex flex-col justify-end h-full">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold uppercase tracking-widest text-primary">
+            {title}
+          </span>
+          <span className="text-xs font-bold text-muted-foreground">
+            {currentStepIndex + 1} / {journeySteps.length}
+          </span>
+        </div>
+        <div className="w-full bg-muted h-2 rounded-full overflow-hidden">
           <div
-            className="bg-primary-cta h-1 rounded-full transition-all duration-300 ease-out"
+            className="bg-gradient-to-r from-primary to-blue-600 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"
             style={{ width: `${progressPercentage}%` }}
           />
         </div>

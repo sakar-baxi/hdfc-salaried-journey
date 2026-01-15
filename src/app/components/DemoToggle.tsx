@@ -10,6 +10,7 @@ import { CreditCard, ArrowRight } from "lucide-react";
 const JOURNEY_TYPES: JourneyType[] = ["journey2", "journey3"];
 
 const JOURNEY_DETAILS: Record<JourneyType, { label: string; icon: React.ElementType }> = {
+  "journey1": { label: "Journey 1 (Compact)", icon: CreditCard },
   "journey2": { label: "Journey 2 (SAJ)", icon: CreditCard },
   "journey3": { label: "Journey 3 (Direct)", icon: ArrowRight },
 };
@@ -26,7 +27,7 @@ export default function DemoToggle() {
     const nextIndex = (currentIndex + 1) % JOURNEY_TYPES.length;
     setJourneyType(JOURNEY_TYPES[nextIndex]);
   };
-  
+
   const CurrentIcon = journeyType ? JOURNEY_DETAILS[journeyType].icon : CreditCard;
   const currentLabel = journeyType ? JOURNEY_DETAILS[journeyType].label : "Select Journey";
 

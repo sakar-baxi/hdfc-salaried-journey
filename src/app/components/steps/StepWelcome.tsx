@@ -32,6 +32,15 @@ export default function StepWelcome() {
   }, []);
 
   useEffect(() => {
+    if (formData.pan && formData.pan !== pan) {
+      setPan(formData.pan);
+    }
+    if (formData.mobileNumber && formData.mobileNumber !== mobileNumber) {
+      setMobileNumber(formData.mobileNumber);
+    }
+  }, [formData.pan, formData.mobileNumber]);
+
+  useEffect(() => {
     if (otpSent && timer > 0) {
       const interval = setInterval(() => setTimer((t) => t - 1), 1000);
       return () => clearInterval(interval);

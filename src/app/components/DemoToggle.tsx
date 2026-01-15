@@ -16,16 +16,23 @@ const JOURNEY_DETAILS: Record<JourneyType, { label: string; icon: React.ElementT
 };
 
 export default function DemoToggle() {
-  const { journeyType, setJourneyType } = useJourney();
+  const { journeyType, setJourneyType, updateFormData } = useJourney();
 
   const cycleJourneyType = () => {
+    let nextJourney: JourneyType;
     if (!journeyType) {
-      setJourneyType("journey2");
-      return;
+      nextJourney = "journey2";
+    } else {
+      const currentIndex = JOURNEY_TYPES.indexOf(journeyType);
+      const nextIndex = (currentIndex + 1) % JOURNEY_TYPES.length;
+      nextJourney = JOURNEY_TYPES[nextIndex];
     }
-    const currentIndex = JOURNEY_TYPES.indexOf(journeyType);
-    const nextIndex = (currentIndex + 1) % JOURNEY_TYPES.length;
-    setJourneyType(JOURNEY_TYPES[nextIndex]);
+
+    setJourneyType(nextJourney);
+
+    // Update PAN based on journey
+    const nextPan = nextJourney === "journey3" ? "EXSIT1234P" : "ABCDE1234E";
+    updateFormData({ pan: nextPan });
   };
 
   const CurrentIcon = journeyType ? JOURNEY_DETAILS[journeyType].icon : CreditCard;

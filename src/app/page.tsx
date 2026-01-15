@@ -6,18 +6,33 @@ import { useJourney } from "@/app/context/JourneyContext";
 import Sidebar from "@/app/components/layout/Sidebar";
 import MobileProgressBar from "@/app/components/layout/MobileProgressBar";
 import DemoToggle from "@/app/components/DemoToggle";
+import MobileMockDrawer from "@/app/components/MobileMockDrawer";
 import JourneyStepWrapper from "@/app/components/JourneyStepWrapper";
 import { AnimatePresence } from "framer-motion";
-// Import the new definitions
 import { ALL_STEPS, STEP_COMPONENTS } from "@/app/context/stepDefinitions";
+import { useState, useEffect } from "react";
 
 export default function Home() {
   const { 
     currentStepIndex, 
     journeySteps, 
     CurrentStepComponent, 
-    currentBranchComponent // <-- Get the new branch state
+    currentBranchComponent,
+    journeyType,
+    setJourneyType
   } = useJourney();
+  
+  const [otp, setOtp] = useState<string | undefined>();
+  const [journeyLink, setJourneyLink] = useState<string | undefined>();
+
+  // Generate journey link on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const link = `${window.location.origin}${window.location.pathname}?journey=${Date.now()}`;
+      setJourneyLink(link);
+    }
+  }, []);
+
   
   // --- NEW RENDER LOGIC ---
   // Priority:
@@ -52,6 +67,17 @@ export default function Home() {
       </main>
 
       <DemoToggle />
+      <MobileMockDrawer 
+        otp={otp} 
+        journeyLink={journeyLink}
+        messages={[
+          {
+            type: "sms",
+            content: "Welcome to HDFC Bank! Start your salary account journey now.",
+            timestamp: new Date().toLocaleTimeString()
+          }
+        ]}
+      />
     </div>
   );
 }

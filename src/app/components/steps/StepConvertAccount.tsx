@@ -25,14 +25,14 @@ export default function StepConvertAccount() {
   };
 
   return (
-    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
+    <Card className="w-full max-w-2xl border-none md:border md:shadow-professional md:rounded-xl mx-auto bg-card min-h-[500px] flex flex-col">
       <CardHeader>
-        <CardTitle className="text-text-darkest">Welcome Back!</CardTitle>
-        <CardDescription>
+        <CardTitle className="text-text-darkest text-2xl font-bold">Welcome Back!</CardTitle>
+        <CardDescription className="text-base">
           We see you already have a savings account with us:
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 flex-1">
         <div className="text-center p-4 bg-muted rounded-md">
           <p className="text-text-gray-2">Existing Savings Account</p>
           <p className="text-2xl font-semibold text-text-darkest">XXXX-XXXX-1234</p>

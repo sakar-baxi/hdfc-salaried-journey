@@ -29,8 +29,8 @@ export default function StepEkycHandler() {
   }, [nextStep]);
 
   return (
-    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
-      <CardContent className="h-96 flex flex-col items-center justify-center text-center">
+    <Card className="w-full max-w-2xl border-none md:border md:shadow-professional md:rounded-xl mx-auto bg-card min-h-[500px] flex flex-col">
+      <CardContent className="flex-1 flex flex-col items-center justify-center text-center">
         <Loader2 className="w-16 h-16 text-primary-cta animate-spin mb-4" />
         <p className="text-lg font-semibold text-text-darkest">
           Connecting to EKYC...

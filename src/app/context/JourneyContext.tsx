@@ -4,12 +4,13 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback, useRef } from "react";
 import { ALL_STEPS, STEP_COMPONENTS } from "./stepDefinitions";
-import type { Step, UserType } from "./stepDefinitions";
+import type { Step, UserType, JourneyType } from "./stepDefinitions";
 
 
 // --- 1. Types ---
 interface JourneyState {
   userType: UserType;
+  journeyType: JourneyType | null;
   currentStepIndex: number;
   journeySteps: Step[];
   CurrentStepComponent: React.ComponentType; // The component for the *main flow*
@@ -18,25 +19,32 @@ interface JourneyState {
   prevStep: () => void;
   goToStep: (stepId: string) => void;
   setUserType: (type: UserType) => void;
+  setJourneyType: (type: JourneyType) => void;
   resetJourney: () => void;
 }
 
 // --- 2. Journey Logic ---
-const getInitialStepsForUserType = (userType: UserType): Step[] => {
+const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
   let stepIds: string[] = [];
-  switch (userType) {
-    case "ntb":
-      // --- MODIFIED: Use 'ekycHandler' ---
-      stepIds = ["welcome", "ekycHandler", "combinedDetails", "kycChoice"];
+  
+  switch (journeyType) {
+    case "journey1": // eKYC only
+      stepIds = ["welcome", "ekycHandler", "complete"];
       break;
-    case "etb-no-acct":
-      stepIds = ["welcome", "combinedDetails", "complete"];
+    case "journey2": // SAJ (Salary Account Journey) - Standard Journey NTB
+      stepIds = ["welcome", "kycChoice", "combinedDetails", "employmentInfo", "nomineeInfo", "loanOffer", "complete"];
       break;
-    case "etb-with-acct":
-      stepIds = ["welcome", "convertAccount", "complete"];
+    case "journey3": // Direct conversion
+      stepIds = ["welcome", "convertAccount", "accountAuth", "complete"];
       break;
   }
-  return stepIds.map(id => ALL_STEPS[id]);
+  
+  return stepIds.map(id => ALL_STEPS[id]).filter(Boolean);
+};
+
+const getInitialStepsForUserType = (userType: UserType): Step[] => {
+  // Default to Journey 2 (SAJ) - Standard Journey NTB
+  return getInitialStepsForJourney("journey2");
 };
 
 // --- 3. Context & Provider ---
@@ -47,8 +55,9 @@ const LOCAL_STORAGE_PREFIX = "hdfcJourney_";
 
 export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   const [userType, _setUserType] = useState<UserType>("ntb");
+  const [journeyType, _setJourneyType] = useState<JourneyType | null>("journey2"); // Default to Journey 2
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
-  const [journeySteps, _setJourneySteps] = useState<Step[]>(getInitialStepsForUserType("ntb"));
+  const [journeySteps, _setJourneySteps] = useState<Step[]>(getInitialStepsForJourney("journey2"));
   const [currentBranchComponent, _setCurrentBranchComponent] = useState<React.ComponentType | null>(null);
   
   const [isInitialized, setIsInitialized] = useState(false);
@@ -96,15 +105,28 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     setBranchComponent(null); // Reset branch
   }, [setJourneySteps, setStepIndex, setBranchComponent]);
 
+  const setJourneyType = useCallback((type: JourneyType) => {
+    _setJourneyType(type);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(`${LOCAL_STORAGE_PREFIX}journeyType`, type);
+    }
+    const newSteps = getInitialStepsForJourney(type);
+    setJourneySteps(newSteps);
+    setStepIndex(0);
+    setBranchComponent(null);
+  }, [setJourneySteps, setStepIndex, setBranchComponent]);
+
   const resetJourney = useCallback(() => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}userType`);
+      localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}journeyType`);
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}stepIndex`);
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}journeySteps`);
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}branchStepId`);
     }
     _setUserType("ntb");
-    const newSteps = getInitialStepsForUserType("ntb");
+    _setJourneyType("journey2");
+    const newSteps = getInitialStepsForJourney("journey2");
     _setJourneySteps(newSteps);
     _setCurrentStepIndex(0);
     setBranchComponent(null); // Reset branch
@@ -133,6 +155,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window !== 'undefined') {
       try {
         const savedUserType = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}userType`) as UserType | null;
+        const savedJourneyType = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}journeyType`) as JourneyType | null;
         const savedStepIndex = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}stepIndex`);
         const savedJourneySteps = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}journeySteps`);
         const savedBranchStepId = localStorage.getItem(`${LOCAL_STORAGE_PREFIX}branchStepId`);
@@ -143,11 +166,11 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
 
           if (parsedSteps.length > 0 && parsedIndex < parsedSteps.length) {
             _setUserType(savedUserType);
+            if (savedJourneyType) _setJourneyType(savedJourneyType);
             _setJourneySteps(parsedSteps);
             _setCurrentStepIndex(parsedIndex); 
             
             if (savedBranchStepId && STEP_COMPONENTS[savedBranchStepId]) {
-              // Use the correct setter
               setBranchComponent(STEP_COMPONENTS[savedBranchStepId]);
             }
           } else { resetJourney(); }
@@ -155,7 +178,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       } catch (error) { resetJourney(); }
       setIsInitialized(true);
     }
-  }, [resetJourney, setBranchComponent]); // Add setBranchComponent to dependency array
+  }, [resetJourney, setBranchComponent]);
 
   // --- Navigation Functions ---
   const nextStep = () => {
@@ -198,6 +221,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     <JourneyContext.Provider
       value={{
         userType,
+        journeyType,
         currentStepIndex,
         journeySteps,
         CurrentStepComponent,
@@ -206,6 +230,7 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
         prevStep,
         goToStep,
         setUserType,
+        setJourneyType,
         resetJourney,
       }}
     >

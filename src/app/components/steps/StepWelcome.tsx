@@ -6,97 +6,180 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
+import { Loader2, AlertCircle } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
 
 export default function StepWelcome() {
   const { nextStep } = useJourney();
+  // Prefilled demo data
+  const [mobileNumber, setMobileNumber] = useState("9876543210");
+  const [dob, setDob] = useState("1990-01-15");
+  const [pan, setPan] = useState("ABCDE1234F");
+  const [otp, setOtp] = useState("123456");
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [timer, setTimer] = React.useState(30);
+  const [validationError, setValidationError] = useState("");
+  const [timer, setTimer] = useState(30);
+  const [isResumedJourney, setIsResumedJourney] = useState(false);
 
-  // --- Track the initial page view ---
   useEffect(() => {
-    trackEvent('page_viewed', { page: 'welcome' });
+    // Check if this is a resumed journey from URL
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isResumed = urlParams.get('resume') === 'true' || urlParams.get('journey');
+      setIsResumedJourney(!!isResumed);
+      
+      if (isResumed) {
+        trackEvent('resumed_journey_detected');
+      }
+    }
+    trackEvent('page_viewed', { page: 'welcome', isResumed: isResumedJourney });
   }, []);
 
-  const handleGenerateOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimer(30); 
-    setTimeout(() => {
-      // --- Track the OTP generation ---
-      trackEvent('form_submitted_generate_otp');
-      setIsLoading(false);
-      setOtpSent(true); 
-    }, 1000);
-  };
-  
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setTimeout(() => {
-      // --- Track the OTP verification ---
-      trackEvent('otp_verified');
-      setIsLoading(false);
-      nextStep(); // Move to EkycHandler
-    }, 1000);
-  };
-
   // Timer effect for "Resend"
-  React.useEffect(() => {
+  useEffect(() => {
     if (otpSent && timer > 0) {
       const interval = setInterval(() => setTimer((t) => t - 1), 1000);
       return () => clearInterval(interval);
     }
   }, [otpSent, timer]);
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // For resumed journey, only validate mobile number
+    if (isResumedJourney) {
+      if (mobileNumber.length !== 10) {
+        setValidationError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      handleGenerateOtp();
+      return;
+    }
+
+    // Validate all fields for new journey
+    if (!mobileNumber || !dob || !pan) {
+      setValidationError("Please fill in all required fields.");
+      return;
+    }
+
+    if (mobileNumber.length !== 10) {
+      setValidationError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (pan.length !== 10) {
+      setValidationError("Please enter a valid 10-character PAN number.");
+      return;
+    }
+
+    setValidationError("");
+    trackEvent('input_submitted', { mobile: mobileNumber, hasDOB: !!dob, hasPAN: !!pan });
+    handleGenerateOtp();
+  };
+
+  const handleGenerateOtp = () => {
+    setIsLoading(true);
+    setTimer(30);
+    trackEvent('form_submitted_generate_otp');
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      setOtpSent(true);
+    }, 1000);
+  };
+  
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    trackEvent('otp_verified');
+    
+    setTimeout(() => {
+      setIsLoading(false);
+      nextStep();
+    }, 1000);
+  };
+
   return (
-    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
-      <form onSubmit={otpSent ? handleVerifyOtp : handleGenerateOtp} autoComplete="off">
-        <CardHeader>
-          <CardTitle className="text-text-darkest">
-            {otpSent ? "Verify Mobile Number" : "Let's begin your journey"}
-          </CardTitle>
-          <CardDescription>
+    <Card className="w-full max-w-2xl border-none md:border md:shadow-professional md:rounded-xl mx-auto bg-card min-h-[500px] flex flex-col">
+      <form onSubmit={otpSent ? handleVerifyOtp : handleSubmit} autoComplete="off">
+      <CardHeader>
+        <CardTitle className="text-text-darkest text-2xl font-bold">
+          {otpSent 
+            ? "Verify Mobile Number" 
+            : isResumedJourney 
+            ? "Resume Your Journey" 
+            : "Welcome"}
+        </CardTitle>
+          <CardDescription className="text-base">
             {otpSent 
-              ? `We've sent a 6-digit OTP to +91 9876543210.` 
-              : "Details are pre-filled for this demo. Click 'Get OTP' to continue."}
+              ? `We've sent a 6-digit OTP to +91 ${mobileNumber}. Please enter the OTP to continue.` 
+              : isResumedJourney
+              ? "Enter your mobile number to resume your journey. OTP will be sent by the bank."
+              : "Enter your Aadhaar-linked mobile number, date of birth, and PAN number to begin."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 flex-1">
           {!otpSent ? (
             <>
-              {/* All fields now use defaultValue to pre-fill and avoid errors */}
               <div className="space-y-2">
-                <Label htmlFor="mobile">Mobile Number</Label>
+                <Label htmlFor="mobile">Aadhaar-linked Mobile Number</Label>
                 <Input 
                   id="mobile" 
                   type="tel" 
                   required 
-                  defaultValue="9876543210"
+                  value={mobileNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    setMobileNumber(value);
+                    setValidationError("");
+                  }}
+                  placeholder="Enter 10-digit mobile number"
                   autoComplete="tel"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="pan">PAN</Label>
-                <Input 
-                  id="pan" 
-                  required 
-                  defaultValue="ABCDE1234F"
-                  autoComplete="off" 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dob">Date of Birth</Label>
-                <Input 
-                  id="dob" 
-                  type="date" 
-                  required 
-                  defaultValue="1990-01-01"
-                  autoComplete="bday" 
-                />
-              </div>
+              {!isResumedJourney && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="dob">Date of Birth</Label>
+                    <Input 
+                      id="dob" 
+                      type="date" 
+                      required
+                      value={dob}
+                      onChange={(e) => {
+                        setDob(e.target.value);
+                        setValidationError("");
+                      }}
+                      max={new Date().toISOString().split('T')[0]}
+                      autoComplete="bday"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pan">PAN Number</Label>
+                    <Input 
+                      id="pan" 
+                      type="text"
+                      required
+                      value={pan}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                        setPan(value);
+                        setValidationError("");
+                      }}
+                      placeholder="ABCDE1234F"
+                      maxLength={10}
+                      autoComplete="off"
+                    />
+                  </div>
+                </>
+              )}
+              {validationError && (
+                <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-md text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <span>{validationError}</span>
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -108,7 +191,12 @@ export default function StepWelcome() {
                   type="tel" 
                   inputMode="numeric" 
                   required 
-                  defaultValue="134561"
+                  value={otp}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtp(value);
+                  }}
+                  placeholder="000000"
                   autoComplete="one-time-code"
                 />
               </div>
@@ -119,7 +207,10 @@ export default function StepWelcome() {
                   type="button"
                   className="text-text-gray-1" 
                   disabled={timer > 0 || isLoading}
-                  onClick={() => handleGenerateOtp(new Event('submit') as any)}
+                  onClick={() => {
+                    setTimer(30);
+                    handleGenerateOtp();
+                  }}
                 >
                   {timer > 0 ? `Resend OTP in ${timer}s` : "Resend OTP"}
                 </Button>
@@ -128,9 +219,9 @@ export default function StepWelcome() {
           )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" variant="primary-cta" className="w-full" disabled={isLoading}>
+          <Button type="submit" variant="primary-cta" className="w-full h-12 text-base font-semibold" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {otpSent ? "Verify OTP" : "Get OTP"}
+            {otpSent ? "Verify OTP" : isResumedJourney ? "Get OTP" : "Continue"}
           </Button>
         </CardFooter>
       </form>

@@ -25,7 +25,7 @@ export const ALL_STEPS: Record<string, Step> = {
   journeySelection: { id: "journeySelection", title: "Select Journey" },
   welcome: { id: "welcome", title: "Identify Yourself" },
   kycChoice: { id: "kycChoice", title: "Select KYC" },
-  contactDetails: { id: "contactDetails", title: "Contact Details" },
+  contactDetails: { id: "contactDetails", title: "Personal Profile" },
   combinedDetails: { id: "combinedDetails", title: "Your Profile" },
   employmentInfo: { id: "employmentInfo", title: "Your Info" },
   kycDetails: { id: "kycDetails", title: "KYC Details" },

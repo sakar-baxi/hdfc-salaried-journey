@@ -18,6 +18,7 @@ export default function StepContactDetails() {
     const [maritalStatus, setMaritalStatus] = useState<"Single" | "Married">(formData.maritalStatus || "Married");
     const [fatherName, setFatherName] = useState(formData.fatherName || "Ramesh Ameta");
     const [motherName, setMotherName] = useState(formData.motherName || "Maina Ameta");
+    const [annualIncome, setAnnualIncome] = useState(formData.annualIncome || "5,00,000 - 10,00,000");
     const [nomineeName, setNomineeName] = useState(formData.nomineeName || "Maina Ameta");
     const [nomineeDob, setNomineeDob] = useState(formData.nomineeDob || { day: "19", month: "07", year: "1971" });
     const [addressSame, setAddressSame] = useState(formData.addressSame !== undefined ? formData.addressSame : true);
@@ -35,6 +36,7 @@ export default function StepContactDetails() {
             maritalStatus,
             fatherName,
             motherName,
+            annualIncome,
             nomineeName,
             nomineeDob,
             addressSame
@@ -50,7 +52,7 @@ export default function StepContactDetails() {
     return (
         <div className="w-full max-w-4xl mx-auto space-y-6">
             <StepBanner
-                title="Verify & Update your Profile"
+                title="Personal Information"
                 name="Chirag Ameta"
                 subTitle="S S PLAZA"
             />
@@ -58,10 +60,10 @@ export default function StepContactDetails() {
             <Card className="border-none shadow-premium-lg bg-card/60 backdrop-blur-xl rounded-[32px] overflow-hidden">
                 <CardContent className="p-10 space-y-12">
 
-                    {/* Section 1: Aadhaar Verification */}
+                    {/* Section 1: Key Details */}
                     <div className="space-y-6">
                         <h3 className="text-xl font-bold text-primary flex items-center gap-2">
-                            <Info className="w-5 h-5" /> Details from Aadhaar
+                            <Info className="w-5 h-5" /> Key Details
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-slate-50/50 p-6 rounded-[2rem] border border-slate-100">
                             <div className="space-y-4">
@@ -92,7 +94,7 @@ export default function StepContactDetails() {
                         </div>
                     </div>
 
-                    {/* Section 2: Personal Stats */}
+                    {/* Section 2: Personal & Professional Stats */}
                     <div className="space-y-6 pt-6 border-t border-slate-100">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-4">
@@ -134,6 +136,24 @@ export default function StepContactDetails() {
                                     className="h-14 bg-white border border-slate-200 shadow-sm rounded-2xl px-6 font-semibold"
                                 />
                             </div>
+                            <div className="space-y-4">
+                                <Label className="text-sm font-bold text-slate-700">Annual Income (₹)</Label>
+                                <Select value={annualIncome} onValueChange={setAnnualIncome}>
+                                    <SelectTrigger className="h-14 bg-white border border-slate-200 shadow-sm rounded-2xl px-6 text-lg font-semibold">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-2xl border-none shadow-premium">
+                                        <SelectItem value="Upto 2,00,000">Upto 2,00,000</SelectItem>
+                                        <SelectItem value="2,00,000 - 5,00,000">2,00,000 - 5,00,000</SelectItem>
+                                        <SelectItem value="5,00,000 - 10,00,000">5,00,000 - 10,00,000</SelectItem>
+                                        <SelectItem value="10,00,000 - 25,00,000">10,00,000 - 25,00,000</SelectItem>
+                                        <SelectItem value="25,00,000+">25,00,000+</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="space-y-4">
                                 <Label className="text-sm font-bold text-slate-700">Nominee's Name</Label>
                                 <Input

@@ -12,6 +12,7 @@ import StepVideoKyc from "@/app/components/steps/StepVideoKyc";
 import StepEkycHandler from "@/app/components/steps/StepEkycHandler";
 import StepPhysicalKyc from "@/app/components/steps/StepPhysicalKyc";
 import StepAccountConversion from "@/app/components/steps/StepAccountConversion";
+import StepProfessionalDetailsExpress from "@/app/components/steps/StepProfessionalDetailsExpress";
 
 export type UserType = "ntb" | "etb-no-acct" | "etb-with-acct";
 export type JourneyType = "journey1" | "journey2" | "journey3";
@@ -28,9 +29,10 @@ export const ALL_STEPS: Record<string, Step> = {
   contactDetails: { id: "contactDetails", title: "Personal Profile" },
   combinedDetails: { id: "combinedDetails", title: "Your Profile" },
   employmentInfo: { id: "employmentInfo", title: "VKYC Consent" },
-  kycDetails: { id: "kycDetails", title: "KYC Details" },
+  kycDetails: { id: "kycDetails", title: "VKYC Consent" },
   videoKyc: { id: "videoKyc", title: "Video KYC" },
   accountConversion: { id: "accountConversion", title: "Convert Account" },
+  professionalDetailsExpress: { id: "professionalDetailsExpress", title: "Your Profile" },
   complete: { id: "complete", title: "Submitted" },
 };
 
@@ -47,4 +49,5 @@ export const STEP_COMPONENTS: Record<string, React.ComponentType> = {
   ekycHandler: StepEkycHandler,
   physicalKyc: StepPhysicalKyc,
   accountConversion: StepAccountConversion,
+  professionalDetailsExpress: StepProfessionalDetailsExpress,
 };

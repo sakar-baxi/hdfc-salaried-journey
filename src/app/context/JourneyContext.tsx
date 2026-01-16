@@ -48,7 +48,7 @@ const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
       stepIds = ["welcome", "kycChoice", "contactDetails", "kycDetails", "videoKyc", "complete"];
       break;
     case "journey3": // Direct Conversion / Existing Account (Express Flow)
-      stepIds = ["welcome", "accountConversion", "complete"];
+      stepIds = ["welcome", "professionalDetailsExpress", "accountConversion", "complete"];
       break;
   }
 

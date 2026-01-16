@@ -27,7 +27,7 @@ export const ALL_STEPS: Record<string, Step> = {
   kycChoice: { id: "kycChoice", title: "Select KYC" },
   contactDetails: { id: "contactDetails", title: "Personal Profile" },
   combinedDetails: { id: "combinedDetails", title: "Your Profile" },
-  employmentInfo: { id: "employmentInfo", title: "Your Info" },
+  employmentInfo: { id: "employmentInfo", title: "VKYC Consent" },
   kycDetails: { id: "kycDetails", title: "KYC Details" },
   videoKyc: { id: "videoKyc", title: "Video KYC" },
   accountConversion: { id: "accountConversion", title: "Convert Account" },

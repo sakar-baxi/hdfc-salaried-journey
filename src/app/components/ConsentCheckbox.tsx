@@ -66,11 +66,9 @@ export default function ConsentCheckbox({
   };
 
   const handleConfirm = () => {
-    if (hasScrolledToBottom) {
-      onCheckedChange(true);
-      setIsDialogOpen(false);
-      setHasScrolledToBottom(false);
-    }
+    onCheckedChange(true);
+    setIsDialogOpen(false);
+    setHasScrolledToBottom(false);
   };
 
   return (
@@ -165,7 +163,6 @@ export default function ConsentCheckbox({
                 variant="primary-cta"
                 className="rounded-xl flex-1 sm:flex-none font-bold px-8 shadow-lg shadow-primary/20 transition-all active:scale-[0.98]"
                 onClick={handleConfirm}
-                disabled={!hasScrolledToBottom}
               >
                 Confirm & Agree
               </Button>

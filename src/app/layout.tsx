@@ -8,8 +8,9 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-sans",
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -26,15 +27,11 @@ export default function RootLayout({
     // --- MODIFIED: Removed 'dark' class ---
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
       </head>
       {/* --- MODIFIED: Removed all extra classes --- */}
-      <body 
+      <body
         className={cn(
-          "min-h-screen font-sans antialiased", 
+          "min-h-screen font-sans antialiased",
           plusJakartaSans.variable
         )}
       >

@@ -15,6 +15,13 @@ export interface Notification {
   timestamp: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  role: "agent" | "user";
+  content: string;
+  timestamp: string;
+}
+
 interface JourneyState {
   userType: UserType;
   journeyType: JourneyType | null;
@@ -34,6 +41,8 @@ interface JourneyState {
   formData: Record<string, any>;
   updateFormData: (data: Record<string, any>) => void;
   isResumeFlow: boolean;
+  chatMessages: ChatMessage[];
+  sendMessage: (content: string) => void;
 }
 
 // --- 2. Journey Logic ---
@@ -45,10 +54,10 @@ const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
       stepIds = ["welcome", "kycChoice", "kycDetails", "videoKyc", "complete"];
       break;
     case "journey2": // Standard Salary Account Journey (Full Flow)
-      stepIds = ["welcome", "kycChoice", "contactDetails", "kycDetails", "videoKyc", "complete"];
+      stepIds = ["welcome", "kycChoice", "ekycHandler", "contactDetails", "combinedDetails", "kycDetails", "videoKyc", "reviewApplication", "complete"];
       break;
     case "journey3": // Direct Conversion / Existing Account (Express Flow)
-      stepIds = ["welcome", "professionalDetailsExpress", "accountConversion", "complete"];
+      stepIds = ["welcome", "professionalDetailsExpress", "combinedDetails", "accountConversion", "complete"];
       break;
   }
 
@@ -79,6 +88,29 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       timestamp: "Just now"
     }
   ]);
+
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+
+  const sendMessage = useCallback((content: string) => {
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(),
+      role: "user",
+      content,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatMessages(prev => [...prev, userMsg]);
+
+    // Simple simulated agent response
+    setTimeout(() => {
+      const agentMsg: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: "agent",
+        content: `I've received your message: "${content}". How else can I help you today?`,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setChatMessages(prev => [...prev, agentMsg]);
+    }, 1000);
+  }, []);
 
   const addNotification = useCallback((title: string, body: string) => {
     const newNotif = {
@@ -331,6 +363,8 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
         formData,
         updateFormData,
         isResumeFlow,
+        chatMessages,
+        sendMessage,
       }}
     >
       {children}

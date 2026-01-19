@@ -3,40 +3,60 @@
 "use client";
 
 import { useJourney } from "@/app/context/JourneyContext";
+import { STEP_COMPONENTS } from "@/app/context/stepDefinitions";
 import Navbar from "@/app/components/layout/Navbar";
 import DemoToggle from "@/app/components/DemoToggle";
 import MobileMockDrawer from "@/app/components/MobileMockDrawer";
 import JourneyStepWrapper from "@/app/components/JourneyStepWrapper";
+import AgentLayout from "@/app/components/layout/AgentLayout";
 import { AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const {
-    CurrentStepComponent,
+    journeySteps,
+    currentStepIndex,
     currentBranchComponent,
   } = useJourney();
 
-  const ComponentToRender = currentBranchComponent || CurrentStepComponent;
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const history = journeySteps.slice(0, currentStepIndex);
+  const BranchComponent = currentBranchComponent;
 
-  if (!ComponentToRender) {
-    return null;
-  }
-
-  const currentStepId = ComponentToRender.name;
+  useEffect(() => {
+    if (scrollRef.current) {
+      setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+      }, 100);
+    }
+  }, [currentStepIndex, currentBranchComponent]);
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50/50">
-      <Navbar />
+    <div className="min-h-screen">
+      <AgentLayout>
+        <div className="flex flex-col gap-3 lg:gap-4 pb-20">
+          {history.map((step) => {
+            const StepComponent = STEP_COMPONENTS[step.id];
+            if (!StepComponent) return null;
 
-      <main className="flex-1 flex flex-col items-center justify-start p-0 md:p-10 relative overflow-x-hidden">
-        <div className="w-full h-full flex-grow flex flex-col justify-start items-center pt-8 pb-12 px-4 md:p-0">
-          <AnimatePresence mode="wait">
-            <JourneyStepWrapper key={currentStepId}>
-              <ComponentToRender />
-            </JourneyStepWrapper>
-          </AnimatePresence>
+            return (
+              <JourneyStepWrapper key={step.id}>
+                <StepComponent />
+              </JourneyStepWrapper>
+            );
+          })}
+
+          <JourneyStepWrapper key={journeySteps[currentStepIndex]?.id || 'current'}>
+            {BranchComponent ? (
+              <BranchComponent />
+            ) : (
+              journeySteps[currentStepIndex] ? React.createElement(STEP_COMPONENTS[journeySteps[currentStepIndex].id]) : null
+            )}
+          </JourneyStepWrapper>
+
+          <div ref={scrollRef} className="h-2" />
         </div>
-      </main>
+      </AgentLayout>
 
       <DemoToggle />
       <MobileMockDrawer />

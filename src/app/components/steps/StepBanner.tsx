@@ -19,13 +19,12 @@ export default function StepBanner({ title, name, subTitle, className }: StepBan
                 {name && (
                     <div className="mb-4">
                         <p className="text-sm opacity-70 font-semibold uppercase tracking-wider">Name :</p>
-                        <p className="text-2xl md:text-3xl font-black">{name}</p>
+                        <p className="text-2xl md:text-3xl font-extrabold">{name}</p>
                     </div>
                 )}
                 {subTitle && (
                     <div className="mt-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20">
-                        <p className="text-sm font-bold uppercase tracking-widest opacity-80">Your Account will be opened at</p>
-                        <p className="text-lg font-black">{subTitle}</p>
+                        <p className="text-lg font-extrabold">{subTitle}</p>
                     </div>
                 )}
             </div>

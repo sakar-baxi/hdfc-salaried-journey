@@ -1,120 +1,91 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
-import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Smartphone, Building, ChevronRight, FileText } from "lucide-react";
+import { CheckCircle2, Video, FileText } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import { cn } from "@/lib/utils";
+import AgentMessage from "@/app/components/chat/AgentMessage";
+import UserResponse from "@/app/components/chat/UserResponse";
+import HelpIcon from "@/app/components/shared/HelpIcon";
 
 export default function StepKycChoice() {
-  const { goToStep } = useJourney();
-  const [selected, setSelected] = useState<"aadhaar" | "other" | null>("aadhaar");
+  const { nextStep, currentStepIndex, journeySteps, formData, updateFormData } = useJourney();
+  const [selectedMethod, setSelectedMethod] = useState<string | null>(formData.kycMethod || null);
+
+  const myIndex = journeySteps.findIndex(s => s.id === "kycChoice");
+  const isHistory = myIndex !== -1 && myIndex < currentStepIndex;
+  const isActive = myIndex === currentStepIndex;
 
   useEffect(() => {
-    trackEvent('page_viewed', { page: 'kycChoice' });
-  }, []);
-
-  const handleContinue = () => {
-    if (selected === "aadhaar") {
-      trackEvent('kyc_choice_made', { choice: 'ekyc' });
-      goToStep("ekycHandler");
-    } else {
-      trackEvent('kyc_choice_made', { choice: 'physical' });
-      goToStep("physicalKyc");
+    if (isActive) {
+      trackEvent('page_viewed', { page: 'kyc_choice' });
     }
+  }, [isActive]);
+
+  const handleChoice = (method: "ekyc" | "vkyc") => {
+    setSelectedMethod(method);
+    updateFormData({ kycMethod: method });
+    trackEvent('kyc_method_selected', { method });
+
+    // Just proceed to next step in the journey flow
+    setTimeout(() => {
+      nextStep();
+    }, 300);
   };
 
+  if (isHistory) {
+    return (
+      <div className="space-y-3">
+        <AgentMessage isNew={false}>
+          Great! Let's proceed with your chosen KYC method.
+        </AgentMessage>
+        <UserResponse isNew={false}>
+          <div className="flex items-center gap-2">
+            <span>{selectedMethod === "ekyc" ? "e-KYC via Aadhaar" : "Video KYC"}</span>
+            <CheckCircle2 className="w-3 h-3" />
+          </div>
+        </UserResponse>
+      </div>
+    );
+  }
+
+  if (!isActive) return null;
+
   return (
-    <Card className="w-full max-w-4xl border-none md:border md:shadow-premium md:rounded-3xl mx-auto bg-card/60 backdrop-blur-xl overflow-hidden min-h-[500px] flex flex-col">
-      <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary via-blue-400 to-primary/50" />
-      <CardHeader className="text-center pt-12 pb-6">
-        <CardTitle className="text-2xl font-bold tracking-tight text-primary">
-          Select KYC Method for your verification
-        </CardTitle>
-      </CardHeader>
+    <div className="space-y-3 w-full animate-in slide-in-from-bottom-4 duration-300">
+      <AgentMessage>
+        How would you like to complete your KYC verification? Choose the option that works best for you.
+      </AgentMessage>
 
-      <CardContent className="px-10 pb-8 flex-1 flex flex-col justify-center">
-        <div className="flex flex-col md:flex-row gap-0 rounded-3xl overflow-hidden border border-primary/20 shadow-premium-sm transition-all duration-500">
-          {/* Aadhaar Card */}
-          <button
-            onClick={() => setSelected("aadhaar")}
-            className={cn(
-              "flex-1 p-10 flex flex-col items-center justify-center gap-4 transition-all duration-500 relative group",
-              selected === "aadhaar"
-                ? "bg-primary text-white"
-                : "bg-white text-primary hover:bg-blue-50"
-            )}
-          >
-            <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500",
-              selected === "aadhaar" ? "bg-white/20" : "bg-primary/5 group-hover:bg-primary/10"
-            )}>
-              <Smartphone className="w-8 h-8" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold">Use Aadhaar</h3>
-              <p className={cn(
-                "text-xs mt-2 font-medium opacity-80 uppercase tracking-widest",
-                selected === "aadhaar" ? "text-blue-100" : "text-slate-500"
-              )}>
-                (Create Instant Account)
-              </p>
-            </div>
-            {selected === "aadhaar" && (
-              <div className="absolute inset-0 border-4 border-white opacity-20 pointer-events-none" />
-            )}
-          </button>
-
-          <div className="w-[1px] bg-primary/10 hidden md:block" />
-
-          {/* Other Card */}
-          <button
-            onClick={() => setSelected("other")}
-            className={cn(
-              "flex-1 p-10 flex flex-col items-center justify-center gap-4 transition-all duration-500 relative group",
-              selected === "other"
-                ? "bg-primary text-white"
-                : "bg-white text-primary hover:bg-blue-50"
-            )}
-          >
-            <div className={cn(
-              "w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-500",
-              selected === "other" ? "bg-white/20" : "bg-primary/5 group-hover:bg-primary/10"
-            )}>
-              <Building className="w-8 h-8" />
-            </div>
-            <div className="text-center">
-              <h3 className="text-2xl font-bold">Use Other Document for KYC</h3>
-              <p className={cn(
-                "text-xs mt-2 font-medium opacity-80 uppercase tracking-widest",
-                selected === "other" ? "text-blue-100" : "text-slate-500"
-              )}>
-                (Requires Branch Visit)
-              </p>
-            </div>
-            {selected === "other" && (
-              <div className="absolute inset-0 border-4 border-white opacity-20 pointer-events-none" />
-            )}
-          </button>
+      <div className="pl-8 space-y-2">
+        <div
+          onClick={() => handleChoice("ekyc")}
+          className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center flex-shrink-0 transition-colors">
+            <FileText className="w-5 h-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-900">e-KYC via Aadhaar</p>
+            <p className="text-xs text-slate-500">Instant verification using Aadhaar OTP</p>
+          </div>
+          <HelpIcon tooltip="Complete verification in 2 minutes using your Aadhaar number and OTP" />
         </div>
 
-        <div className="mt-12 flex justify-center">
-          <Button
-            onClick={handleContinue}
-            className="h-16 px-16 rounded-full bg-[#00871E] hover:bg-[#007018] text-white text-2xl font-bold shadow-xl shadow-green-900/20 gap-3 transition-all hover:scale-[1.05] active:scale-[0.95]"
-          >
-            Continue <ChevronRight className="w-6 h-6 stroke-[3px]" />
-          </Button>
+        <div
+          onClick={() => handleChoice("vkyc")}
+          className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-green-50 group-hover:bg-green-100 flex items-center justify-center flex-shrink-0 transition-colors">
+            <Video className="w-5 h-5 text-green-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-900">Video KYC</p>
+            <p className="text-xs text-slate-500">Live video call with our agent</p>
+          </div>
+          <HelpIcon tooltip="Schedule a video call with our KYC agent for verification" />
         </div>
-      </CardContent>
-
-      <CardFooter className="pb-10 pt-0 flex justify-center">
-        <p className="text-xs text-muted-foreground flex items-center gap-2">
-          <FileText className="w-3 h-3" /> All data is encrypted and secure with HDFC Bank
-        </p>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }

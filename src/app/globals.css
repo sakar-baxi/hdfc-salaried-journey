@@ -6,9 +6,9 @@
 
 @layer base {
   :root {
-    /* --- PREMIUM MODERN PALETTE --- */
-    --background: 210 40% 98%;
-    /* Soft off-white with blue tint */
+    /* --- MINIMALIST CLEAN PALETTE --- */
+    --background: 0 0% 100%;
+    /* Pure white */
     --foreground: 222 47% 11%;
     /* Deep navy text */
 
@@ -19,34 +19,38 @@
     --popover-foreground: 222 47% 11%;
 
     --primary: 221 83% 53%;
-    /* Modern HDFC Blue */
-    --primary-foreground: 210 40% 98%;
+    /* Blue-600 */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96%;
+    --secondary: 210 40% 97%;
+    /* Slate-50 */
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 210 40% 92%;
+    --muted: 215 16% 47%;
+    /* Slate-500 */
     --muted-foreground: 215 16% 47%;
 
-    --accent: 210 40% 96%;
+    --accent: 210 40% 97%;
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --success: 142 67% 30%;
-    --success-foreground: 210 40% 98%;
+    --success: 142 71% 45%;
+    /* Green-500 */
+    --success-foreground: 0 0% 100%;
 
     --border: 214 32% 91%;
+    /* Slate-200 */
     --input: 214 32% 91%;
 
     --primary-cta: 221 83% 53%;
-    /* #3B82F6 */
     --primary-cta-hover: 221 83% 45%;
     --primary-cta-foreground: 0 0% 100%;
 
     --ring: 221 83% 53%;
-    --radius: 1rem;
+    --radius: 0.75rem;
+    /* 12px - less rounded */
   }
 
   .dark {
@@ -83,17 +87,15 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-white text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
-    background-image:
-      radial-gradient(at 0% 0%, hsla(221, 83%, 53%, 0.05) 0px, transparent 50%),
-      radial-gradient(at 100% 0%, hsla(350, 83%, 45%, 0.05) 0px, transparent 50%);
+    /* Remove background gradients for cleaner look */
   }
 }
 
 @layer utilities {
   .glass {
-    @apply bg-white/70 backdrop-blur-md border border-white/20;
+    @apply bg-white/90 backdrop-blur-sm border border-slate-100;
   }
 
   .glass-dark {
@@ -104,12 +106,17 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-blue-400;
   }
 
+  /* Subtle shadows for minimalist design */
+  .shadow-premium-sm {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+
   .shadow-premium {
-    box-shadow: 0 10px 30px -5px rgba(0, 71, 204, 0.08), 0 5px 15px -5px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
   }
 
   .shadow-premium-lg {
-    box-shadow: 0 25px 50px -12px rgba(0, 71, 204, 0.12), 0 10px 20px -5px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
   }
 
   .scrollbar-hide::-webkit-scrollbar {

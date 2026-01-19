@@ -3,130 +3,193 @@
 import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowRight, Loader2, Info } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CheckCircle2 } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import StepBanner from "./StepBanner";
-import { cn } from "@/lib/utils";
+import AgentMessage from "@/app/components/chat/AgentMessage";
+import UserResponse from "@/app/components/chat/UserResponse";
+import HelpIcon from "@/app/components/shared/HelpIcon";
 
 export default function StepProfessionalDetailsExpress() {
-    const { nextStep, formData, updateFormData } = useJourney();
+    const { nextStep, formData, updateFormData, currentStepIndex, journeySteps } = useJourney();
 
-    // Form States - Only Annual Income required
+    // Prefilled data with editable nominee fields
     const [annualIncome, setAnnualIncome] = useState(formData.annualIncome || "2000000");
+    const [nomineeName, setNomineeName] = useState(formData.nomineeName || "Sunita Sharma");
+    const [nomineeRelation, setNomineeRelation] = useState(formData.nomineeRelation || "Mother");
+    const [nomineeDob, setNomineeDob] = useState(formData.nomineeDob || "1965-03-15");
+    const [enableTransfer, setEnableTransfer] = useState(formData.enableTransfer !== false);
+    const [emailStatement, setEmailStatement] = useState(formData.emailStatement !== false);
+    const [isPep, setIsPep] = useState(formData.isPep || false);
 
-    // Checkbox States
-    const [enableTransfer, setEnableTransfer] = useState(true);
-    const [emailStatement, setEmailStatement] = useState(true);
-    const [isPep, setIsPep] = useState(false);
+    const [isConfirmed, setIsConfirmed] = useState(false);
 
-    const [isRedirecting, setIsRedirecting] = useState(false);
+    const myIndex = journeySteps.findIndex(s => s.id === "professionalDetailsExpress");
+    const isHistory = myIndex !== -1 && myIndex < currentStepIndex;
+    const isActive = myIndex === currentStepIndex;
 
     useEffect(() => {
-        trackEvent('page_viewed', { page: 'professional_details_express' });
-    }, []);
+        if (isActive) trackEvent('page_viewed', { page: 'professional_details_express' });
+    }, [isActive]);
 
-    const handleContinue = () => {
-        setIsRedirecting(true);
+    const handleConfirm = () => {
+        setIsConfirmed(true);
         updateFormData({
             annualIncome,
+            nomineeName,
+            nomineeRelation,
+            nomineeDob,
             enableTransfer,
             emailStatement,
             isPep
         });
 
         setTimeout(() => {
-            setIsRedirecting(false);
             nextStep();
-        }, 1500);
+        }, 500);
     };
 
+    if (isHistory) {
+        return (
+            <div className="space-y-3">
+                <AgentMessage isNew={false}>
+                    Thanks! I've updated your income details and nominee information.
+                </AgentMessage>
+                <UserResponse isNew={false}>
+                    <div className="flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3" />
+                        <span>Details Confirmed</span>
+                    </div>
+                </UserResponse>
+            </div>
+        );
+    }
+
+    if (!isActive) return null;
+
     return (
-        <div className="w-full max-w-4xl mx-auto space-y-6">
-            <StepBanner
-                title="Your Profile"
-                subTitle="Some information about your financial profile"
-            />
+        <div className="space-y-3 w-full animate-in slide-in-from-bottom-4 duration-300">
+            <AgentMessage>
+                Hi {formData.name || "Chirag"}! Please verify your income and nominee details. You can edit the nominee information if needed.
+            </AgentMessage>
 
-            <Card className="border-none shadow-premium-lg bg-card/60 backdrop-blur-xl rounded-[32px] overflow-hidden">
-                <CardContent className="p-8 md:p-12 space-y-8">
+            <div className="pl-8 space-y-3">
+                <div className="bg-slate-50 rounded-lg p-4 space-y-3 border border-slate-200">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Income & Nominee Details</span>
+                        <HelpIcon tooltip="Edit nominee details if needed" />
+                    </div>
 
-                    {/* Only Annual Income Input */}
-                    <div className="space-y-6">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Your Annual Income</Label>
+                    <div className="space-y-3">
+                        <div className="space-y-1.5">
+                            <label className="text-xs text-slate-600">Annual Income (₹)</label>
                             <Input
                                 type="text"
-                                inputMode="numeric"
                                 value={annualIncome}
                                 onChange={(e) => setAnnualIncome(e.target.value.replace(/\D/g, ''))}
-                                className="h-14 font-semibold text-lg bg-white border-slate-200 focus:border-primary px-4 rounded-xl"
-                                placeholder="Enter Amount"
+                                className="h-9 text-sm border-slate-200 focus:border-blue-500"
+                                placeholder="2000000"
                             />
-                        </div>
-                    </div>
-
-                    <div className="space-y-4 pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-3">
-                            <Checkbox
-                                id="transfer"
-                                checked={enableTransfer}
-                                onCheckedChange={(c) => setEnableTransfer(c === true)}
-                                className="w-5 h-5 border-2 border-primary/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <Label htmlFor="transfer" className="text-sm font-medium text-slate-700 cursor-pointer">
-                                Enable money transfer to Non-HDFC bank account holder
-                            </Label>
+                            <p className="text-xs text-slate-500">
+                                ₹{(parseInt(annualIncome || "0") / 100000).toFixed(1)} Lakhs per year
+                            </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
-                            <Checkbox
-                                id="statement"
-                                checked={emailStatement}
-                                onCheckedChange={(c) => setEmailStatement(c === true)}
-                                className="w-5 h-5 border-2 border-primary/40 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                            />
-                            <Label htmlFor="statement" className="text-sm font-medium text-slate-700 cursor-pointer">
-                                Mail me my Bank account statement
-                            </Label>
-                        </div>
+                        <div className="border-t border-slate-200 pt-3">
+                            <p className="text-xs font-semibold text-slate-700 mb-3">Nominee Details</p>
 
-                        <div className="flex items-center justify-between pt-2">
-                            <Label className="text-sm font-medium text-slate-700">
-                                Are you a Politician or a Politically Exposed person (PEP)
-                                <Info className="w-4 h-4 inline ml-1 text-slate-400" />
-                            </Label>
-                            <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
-                                <button type="button" onClick={() => setIsPep(true)} className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all", isPep ? "bg-white shadow-sm text-primary" : "text-slate-400")}>Yes</button>
-                                <button type="button" onClick={() => setIsPep(false)} className={cn("px-4 py-1.5 rounded-md text-sm font-bold transition-all", !isPep ? "bg-white shadow-sm text-primary" : "text-slate-400")}>No</button>
+                            <div className="space-y-3">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-slate-600">Nominee Name</label>
+                                    <Input
+                                        type="text"
+                                        value={nomineeName}
+                                        onChange={(e) => setNomineeName(e.target.value)}
+                                        className="h-9 text-sm border-slate-200 focus:border-blue-500"
+                                    />
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-slate-600">Relationship</label>
+                                    <Select value={nomineeRelation} onValueChange={setNomineeRelation}>
+                                        <SelectTrigger className="h-9 text-sm">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="Mother">Mother</SelectItem>
+                                            <SelectItem value="Father">Father</SelectItem>
+                                            <SelectItem value="Spouse">Spouse</SelectItem>
+                                            <SelectItem value="Son">Son</SelectItem>
+                                            <SelectItem value="Daughter">Daughter</SelectItem>
+                                            <SelectItem value="Brother">Brother</SelectItem>
+                                            <SelectItem value="Sister">Sister</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs text-slate-600">Nominee Date of Birth</label>
+                                    <Input
+                                        type="date"
+                                        value={nomineeDob}
+                                        onChange={(e) => setNomineeDob(e.target.value)}
+                                        className="h-9 text-sm border-slate-200 focus:border-blue-500"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                </CardContent>
+                        <div className="border-t border-slate-200 pt-3 space-y-2">
+                            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={enableTransfer}
+                                    onChange={(e) => setEnableTransfer(e.target.checked)}
+                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>Enable online fund transfers</span>
+                            </label>
 
-                <CardFooter className="p-10 pt-0 flex justify-center">
-                    <Button
-                        onClick={handleContinue}
-                        disabled={isRedirecting}
-                        className="h-14 px-16 rounded-full bg-[#00871E] hover:bg-[#007018] text-white text-xl font-bold shadow-xl shadow-green-900/20 gap-3 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                    >
-                        {isRedirecting ? <Loader2 className="w-6 h-6 animate-spin" /> : "Submit"} <ArrowRight className="w-6 h-6" />
-                    </Button>
-                </CardFooter>
-            </Card>
+                            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={emailStatement}
+                                    onChange={(e) => setEmailStatement(e.target.checked)}
+                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>Receive email statements</span>
+                            </label>
 
-            {isRedirecting && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100]">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-300">
-                        <Loader2 className="w-10 h-10 text-primary animate-spin" />
-                        <p className="font-bold text-slate-700">Updating your profile...</p>
+                            <label className="flex items-center gap-2 text-xs text-slate-700 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={isPep}
+                                    onChange={(e) => setIsPep(e.target.checked)}
+                                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span>I am a Politically Exposed Person (PEP)</span>
+                                <HelpIcon tooltip="As per RBI guidelines, please declare if you hold a prominent public position" />
+                            </label>
+                        </div>
                     </div>
                 </div>
-            )}
+
+                <Button
+                    onClick={handleConfirm}
+                    disabled={isConfirmed || !nomineeName || !annualIncome}
+                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                >
+                    {isConfirmed ? (
+                        <>
+                            <CheckCircle2 className="w-4 h-4 mr-2" />
+                            Confirmed
+                        </>
+                    ) : (
+                        "Confirm & Continue"
+                    )}
+                </Button>
+            </div>
         </div>
     );
 }

@@ -3,26 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, ArrowRight, ShieldCheck } from "lucide-react";
+import { Loader2, CheckCircle2, Shield } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import StepBanner from "./StepBanner";
 import { cn } from "@/lib/utils";
+import AgentMessage from "@/app/components/chat/AgentMessage";
+import UserResponse from "@/app/components/chat/UserResponse";
+import HelpIcon from "@/app/components/shared/HelpIcon";
 
 export default function StepEkycHandler() {
-  const { nextStep, formData, updateFormData } = useJourney();
-  const [aadhaarNumber, setAadhaarNumber] = useState(formData.aadhaarNumber || "987654321012");
+  const { nextStep, formData, updateFormData, currentStepIndex, journeySteps } = useJourney();
+  const [aadhaarNumber, setAadhaarNumber] = useState(formData.aadhaarNumber || "");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState("");
   const [timer, setTimer] = useState(30);
 
+  const myIndex = journeySteps.findIndex(s => s.id === "ekycHandler");
+  const isHistory = myIndex !== -1 && myIndex < currentStepIndex;
+  const isActive = myIndex === currentStepIndex;
+
   useEffect(() => {
-    trackEvent('page_viewed', { page: 'ekyc_handler' });
-  }, []);
+    if (isActive) {
+      trackEvent('page_viewed', { page: 'ekyc_handler' });
+    }
+  }, [isActive]);
 
   useEffect(() => {
     if (otpSent && timer > 0) {
@@ -40,12 +46,11 @@ export default function StepEkycHandler() {
     setValidationError("");
     setIsLoading(true);
 
-    // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       setOtpSent(true);
       updateFormData({ aadhaarNumber });
-    }, 1500);
+    }, 1000);
   };
 
   const handleVerifyOtp = (e: React.FormEvent) => {
@@ -61,109 +66,114 @@ export default function StepEkycHandler() {
     setTimeout(() => {
       setIsLoading(false);
       nextStep();
-    }, 1500);
+    }, 1000);
   };
 
-  return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
-      <StepBanner
-        title="E-KYC Verification"
-        subTitle="Secure Aadhaar Validation"
-      />
-
-      <Card className="border-none shadow-premium-lg bg-card/60 backdrop-blur-xl rounded-[32px] overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-emerald-500" />
-
-        <CardHeader className="space-y-4 pb-8 pt-12 px-10 text-center">
-          <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-4 ring-4 ring-green-50/50">
-            <ShieldCheck className="w-8 h-8 text-green-600" />
+  if (isHistory) {
+    return (
+      <div className="space-y-3">
+        <AgentMessage isNew={false}>
+          I've successfully verified your identity using Aadhaar e-KYC.
+        </AgentMessage>
+        <UserResponse isNew={false}>
+          <div className="flex items-center gap-2">
+            <span>Aadhaar ending in {aadhaarNumber.slice(-4)}</span>
+            <CheckCircle2 className="w-3 h-3" />
           </div>
-          <CardTitle className="text-3xl font-black tracking-tight text-slate-900">
-            {otpSent ? "Enter Mobile OTP" : "Aadhaar Verification"}
-          </CardTitle>
-          <CardDescription className="text-lg font-medium text-slate-500 max-w-md mx-auto">
-            {otpSent
-              ? `Enter the 6-digit code sent to the mobile number linked with Aadhaar ending in ${aadhaarNumber.slice(-4)}`
-              : "Enter your 12-digit Aadhaar number to verify your identity securely."}
-          </CardDescription>
-        </CardHeader>
+        </UserResponse>
+      </div>
+    );
+  }
 
-        <CardContent className="px-10 pb-10 max-w-md mx-auto space-y-8">
-          <form onSubmit={otpSent ? handleVerifyOtp : handleSendOtp} className="space-y-8">
-            {!otpSent ? (
-              <div className="space-y-4">
-                <Label htmlFor="aadhaar" className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Aadhaar Number</Label>
-                <Input
-                  id="aadhaar"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={12}
-                  value={aadhaarNumber}
-                  onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
-                  className="h-16 bg-white border-slate-200 focus-visible:ring-green-500/20 text-center text-2xl font-black tracking-widest rounded-2xl shadow-sm"
-                  placeholder="0000 0000 0000"
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="space-y-4">
-                  <Label htmlFor="otp" className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1 text-center block">One Time Password</Label>
-                  <Input
-                    id="otp"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    className="h-16 bg-white border-slate-200 focus-visible:ring-green-500/20 text-center text-3xl font-black tracking-[0.5em] rounded-2xl shadow-sm"
-                    placeholder="000000"
-                    autoFocus
-                  />
-                </div>
-                <div className="flex justify-center">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    type="button"
-                    className={cn(
-                      "text-xs font-bold tracking-tight rounded-full px-6 h-9 transition-all",
-                      timer > 0 ? "text-slate-400 bg-slate-100" : "text-green-600 bg-green-50 hover:bg-green-100"
-                    )}
-                    disabled={timer > 0 || isLoading}
-                    onClick={() => {
-                      setTimer(30);
-                      // Ideally call resend API
-                    }}
-                  >
-                    {timer > 0 ? `Resend Code in ${timer}s` : "Resend Code"}
-                  </Button>
-                </div>
-              </div>
-            )}
+  if (!isActive) return null;
+
+  return (
+    <div className="space-y-3 w-full animate-in slide-in-from-bottom-4 duration-300">
+      <AgentMessage>
+        Let's verify your identity. Please enter your 12-digit Aadhaar number for instant validation.
+      </AgentMessage>
+
+      {!otpSent ? (
+        <div className="pl-8 space-y-3">
+          <form onSubmit={handleSendOtp} className="space-y-3">
+            <div className="flex items-center gap-2 text-xs text-slate-500">
+              <Shield className="w-4 h-4" />
+              <span>Your data is encrypted and secure</span>
+              <HelpIcon tooltip="We use UIDAI's secure API to verify your Aadhaar. Your data is never stored." />
+            </div>
+
+            <div className="flex gap-2">
+              <Input
+                type="text"
+                inputMode="numeric"
+                maxLength={12}
+                value={aadhaarNumber}
+                onChange={(e) => setAadhaarNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                className="h-10 text-sm border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                placeholder="Enter 12-digit Aadhaar"
+                autoFocus
+              />
+              <Button
+                type="submit"
+                disabled={isLoading || aadhaarNumber.length !== 12}
+                className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Send OTP"}
+              </Button>
+            </div>
 
             {validationError && (
-              <p className="text-sm font-bold text-red-500 text-center animate-in slide-in-from-top-1">
-                {validationError}
-              </p>
+              <p className="text-xs text-red-600">{validationError}</p>
             )}
-
-            <Button
-              type="submit"
-              className="w-full h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white text-lg font-bold shadow-xl shadow-slate-900/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <span className="flex items-center gap-2">
-                  {otpSent ? "Verify & Continue" : "Send OTP"} <ArrowRight className="w-5 h-5" />
-                </span>
-              )}
-            </Button>
           </form>
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        <>
+          <AgentMessage>
+            I've sent a 6-digit OTP to your Aadhaar-linked mobile number. Please enter it below.
+          </AgentMessage>
+
+          <div className="pl-8 space-y-3">
+            <form onSubmit={handleVerifyOtp} className="space-y-3">
+              <div className="flex gap-2">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  className="h-10 text-sm border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  placeholder="Enter 6-digit OTP"
+                  autoFocus
+                />
+                <Button
+                  type="submit"
+                  disabled={isLoading || otp.length !== 6}
+                  className="h-10 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify"}
+                </Button>
+              </div>
+
+              {validationError && (
+                <p className="text-xs text-red-600">{validationError}</p>
+              )}
+
+              <button
+                type="button"
+                className={cn(
+                  "text-xs transition-colors",
+                  timer > 0 ? "text-slate-400 cursor-not-allowed" : "text-blue-600 hover:text-blue-700"
+                )}
+                disabled={timer > 0 || isLoading}
+                onClick={() => setTimer(30)}
+              >
+                {timer > 0 ? `Resend OTP in ${timer}s` : "Resend OTP"}
+              </button>
+            </form>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -11,12 +11,17 @@ interface Props {
 export default function JourneyStepWrapper({ children }: Props) {
   return (
     <motion.div
-      // --- MODIFIED: Restoring the "full width" card layout ---
       className="w-full max-w-6xl"
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.5, type: "spring", damping: 20, stiffness: 100 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{
+        duration: 0.3,
+        type: "spring",
+        damping: 25,
+        stiffness: 200,
+        mass: 0.5
+      }}
     >
       {children}
     </motion.div>

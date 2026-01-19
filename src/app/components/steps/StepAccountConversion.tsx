@@ -5,7 +5,7 @@ import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CreditCard, Globe, Eye, EyeOff, Info, BadgeCheck, Sparkles, ShieldCheck } from "lucide-react";
+import { Loader2, CreditCard, Globe, Eye, EyeOff, Info, BadgeCheck, Sparkles, ShieldCheck, ArrowRight } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import AgentMessage from "@/app/components/chat/AgentMessage";

@@ -13,9 +13,13 @@ import StepPhysicalKyc from "@/app/components/steps/StepPhysicalKyc";
 import StepAccountConversion from "@/app/components/steps/StepAccountConversion";
 import StepProfessionalDetailsExpress from "@/app/components/steps/StepProfessionalDetailsExpress";
 import StepReviewApplication from "@/app/components/steps/StepReviewApplication";
+import StepIncomeDetails from "@/app/components/steps/StepIncomeDetails";
+import StepNomineeDetails from "@/app/components/steps/StepNomineeDetails";
 
-export type UserType = "ntb" | "etb-no-acct" | "etb-with-acct";
-export type JourneyType = "journey1" | "journey2" | "journey3";
+import StepLoanOffer from "@/app/components/steps/StepLoanOffer";
+
+export type UserType = "ntb" | "etb-nk" | "etb";
+export type JourneyType = "ntb" | "etb-nk" | "etb" | "journey2";
 
 export interface Step {
   id: string;
@@ -28,22 +32,25 @@ export const ALL_STEPS: Record<string, Step> = {
   kycChoice: { id: "kycChoice", title: "Select KYC" },
   ekycHandler: { id: "ekycHandler", title: "e-KYC Verification" },
   physicalKyc: { id: "physicalKyc", title: "Physical KYC" },
-  contactDetails: { id: "contactDetails", title: "Personal Profile" },
-  combinedDetails: { id: "combinedDetails", title: "Your Profile" },
+  profileDetails: { id: "profileDetails", title: "Your Profile" },
+  incomeDetails: { id: "incomeDetails", title: "Income & Account" },
+  nomineeDetails: { id: "nomineeDetails", title: "Nominee Details" },
   reviewApplication: { id: "reviewApplication", title: "Final Verification" },
   kycDetails: { id: "kycDetails", title: "VKYC Consent" },
   videoKyc: { id: "videoKyc", title: "Video KYC" },
   accountConversion: { id: "accountConversion", title: "Verify Details" },
   professionalDetailsExpress: { id: "professionalDetailsExpress", title: "Your Profile" },
   complete: { id: "complete", title: "Submitted" },
+  loanOffer: { id: "loanOffer", title: "Loan Offer" },
 };
 
 export const STEP_COMPONENTS: Record<string, React.ComponentType> = {
   journeySelection: StepJourneySelection,
   welcome: StepWelcome,
   kycChoice: StepKycChoice,
-  contactDetails: StepContactDetails,
-  combinedDetails: StepCombinedDetails,
+  profileDetails: StepCombinedDetails,
+  incomeDetails: StepIncomeDetails,
+  nomineeDetails: StepNomineeDetails,
   reviewApplication: StepReviewApplication,
   kycDetails: StepKycDetails,
   videoKyc: StepVideoKyc,
@@ -52,4 +59,5 @@ export const STEP_COMPONENTS: Record<string, React.ComponentType> = {
   physicalKyc: StepPhysicalKyc,
   accountConversion: StepAccountConversion,
   professionalDetailsExpress: StepProfessionalDetailsExpress,
+  loanOffer: StepLoanOffer,
 };

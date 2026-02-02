@@ -3,25 +3,20 @@
 import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
-import { Loader2, CheckCircle2, FileText } from "lucide-react";
+import { Loader2, ArrowRight, AlertCircle } from "lucide-react";
+import { useBranding } from "@/app/context/BrandingContext";
 import { trackEvent } from "@/lib/analytics";
-import AgentMessage from "@/app/components/chat/AgentMessage";
-import UserResponse from "@/app/components/chat/UserResponse";
+import StepCard from "@/app/components/layout/StepCard";
 
 export default function StepReviewApplication() {
-    const { nextStep, formData, currentStepIndex, journeySteps } = useJourney();
+    const { nextStep, formData } = useJourney();
+    const { config } = useBranding();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [termsAccepted, setTermsAccepted] = useState(false);
 
-    const myIndex = journeySteps.findIndex(s => s.id === "reviewApplication");
-    const isHistory = myIndex !== -1 && myIndex < currentStepIndex;
-    const isActive = myIndex === currentStepIndex;
-
     useEffect(() => {
-        if (isActive) {
-            trackEvent('page_viewed', { page: 'review_application' });
-        }
-    }, [isActive]);
+        trackEvent('page_viewed', { page: 'review_application' });
+    }, []);
 
     const handleSubmit = () => {
         if (!termsAccepted) return;
@@ -32,79 +27,92 @@ export default function StepReviewApplication() {
         setTimeout(() => {
             setIsSubmitting(false);
             nextStep();
-        }, 2000);
+        }, 1500);
     };
 
-    if (isHistory) {
-        return (
-            <div className="space-y-3">
-                <AgentMessage isNew={false}>
-                    Your application has been submitted successfully!
-                </AgentMessage>
-                <UserResponse isNew={false}>
-                    <div className="flex items-center gap-2">
-                        <FileText className="w-4 h-4" />
-                        <span>Application Submitted</span>
-                        <CheckCircle2 className="w-3 h-3" />
-                    </div>
-                </UserResponse>
-            </div>
-        );
-    }
-
-    if (!isActive) return null;
+    const summaryItems = [
+        { label: "Mobile Number", value: `+91 ${formData.mobileNumber || "—"}` },
+        { label: "Date of Birth", value: formData.dob || "—" },
+        { label: "PAN Number", value: formData.pan || "—" },
+        { label: "Email Address", value: formData.email || "—" },
+        { label: "Father's Name", value: formData.fatherName || "—" },
+        { label: "Mother's Name", value: formData.motherName || "—" },
+        { label: "Marital Status", value: formData.maritalStatus ? formData.maritalStatus.charAt(0).toUpperCase() + formData.maritalStatus.slice(1) : "—" },
+        { label: "Address", value: formData.currentAddress || "—" }
+    ];
 
     return (
-        <div className="space-y-3 w-full animate-in slide-in-from-bottom-4 duration-300">
-            <AgentMessage>
-                Almost done! Here's a summary of your application. Please review and confirm to proceed.
-            </AgentMessage>
+        <StepCard step="Step 5 of 5" maxWidth="lg">
+            {/* Header */}
+            <div className="page-header">
+                <h1 className="page-title">Review Your Application</h1>
+                <p className="page-subtitle">
+                    Please verify all details before submitting
+                </p>
+            </div>
 
-            <div className="pl-8 space-y-3">
-                <div className="bg-slate-50 rounded-lg p-4 space-y-2 text-xs">
-                    <div className="flex justify-between">
-                        <span className="text-slate-600">Name:</span>
-                        <span className="font-semibold text-slate-900">{formData.name || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-600">PAN:</span>
-                        <span className="font-semibold text-slate-900">{formData.panNumber || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-600">Mobile:</span>
-                        <span className="font-semibold text-slate-900">{formData.mobileNumber || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-600">Email:</span>
-                        <span className="font-semibold text-slate-900">{formData.email || "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                        <span className="text-slate-600">City:</span>
-                        <span className="font-semibold text-slate-900">{formData.city || "—"}</span>
-                    </div>
-                </div>
+            {/* Summary Table */}
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+                <table className="w-full divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-100 bg-white">
+                        {summaryItems.map((item, index) => (
+                            <tr key={index} className="hover:bg-gray-50 transition-colors">
+                                <td className="py-4 px-5 text-sm font-semibold text-gray-700 w-2/5">
+                                    {item.label}
+                                </td>
+                                <td className="py-4 px-5 text-sm text-gray-900">
+                                    {item.value}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
 
-                <label className="flex items-start gap-2 text-xs text-slate-600 cursor-pointer">
+            {/* Terms & Conditions */}
+            <div className="space-y-4 pt-2">
+                <label className="flex items-start gap-3 cursor-pointer group">
                     <input
                         type="checkbox"
                         checked={termsAccepted}
                         onChange={(e) => setTermsAccepted(e.target.checked)}
-                        className="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-hdfc-blue focus:ring-hdfc-blue-light cursor-pointer"
                     />
-                    <span>
+                    <span className="text-sm text-gray-600 leading-relaxed">
                         I confirm that all information provided is accurate and I accept the{" "}
-                        <a href="#" className="text-blue-600 hover:underline">Terms & Conditions</a>
+                        <a href="#" className="text-hdfc-blue hover:underline font-medium">
+                            Terms & Conditions
+                        </a>{" "}
+                        of {config.name}.
                     </span>
                 </label>
 
+                {/* Submit Button */}
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || !termsAccepted}
-                    className="h-10 px-6 bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                    className="btn-primary w-full"
                 >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit Application"}
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Submitting Application...
+                        </>
+                    ) : (
+                        <>
+                            Submit Application
+                            <ArrowRight className="w-5 h-5" />
+                        </>
+                    )}
                 </Button>
+
+                {!termsAccepted && (
+                    <p className="helper-text flex items-center gap-1 justify-center">
+                        <AlertCircle className="w-3 h-3" />
+                        Please accept the terms to submit
+                    </p>
+                )}
             </div>
-        </div>
+        </StepCard>
     );
 }

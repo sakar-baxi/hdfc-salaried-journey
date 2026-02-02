@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 interface ConsentCheckboxProps {
   id: string;
-  label: string;
+  label: React.ReactNode | string;
   termsUrl?: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;

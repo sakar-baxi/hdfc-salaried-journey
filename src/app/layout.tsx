@@ -3,12 +3,13 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { JourneyProvider } from "@/app/context/JourneyContext";
+import { BrandingProvider } from "@/app/context/BrandingContext";
 import { cn } from "@/lib/utils";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const openSans = Open_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-sans",
   display: 'swap',
 });
@@ -32,12 +33,14 @@ export default function RootLayout({
       <body
         className={cn(
           "min-h-screen font-sans antialiased",
-          plusJakartaSans.variable
+          openSans.variable
         )}
       >
-        <JourneyProvider>
-          {children}
-        </JourneyProvider>
+        <BrandingProvider>
+          <JourneyProvider>
+            {children}
+          </JourneyProvider>
+        </BrandingProvider>
       </body>
     </html>
   );

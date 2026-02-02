@@ -5,14 +5,15 @@
 import { useJourney } from "@/app/context/JourneyContext";
 import { JourneyType } from "@/app/context/stepDefinitions";
 import { Toggle } from "@/components/ui/toggle";
-import { CreditCard, ArrowRight } from "lucide-react";
+import { CreditCard, ArrowRight, Zap, Gift } from "lucide-react";
 
-const JOURNEY_TYPES: JourneyType[] = ["journey2", "journey3"];
+const JOURNEY_TYPES: JourneyType[] = ["ntb", "etb-nk", "etb", "journey2"];
 
 const JOURNEY_DETAILS: Record<JourneyType, { label: string; icon: React.ElementType }> = {
-  "journey1": { label: "Journey 1 (Compact)", icon: CreditCard },
-  "journey2": { label: "Journey 2 (SAJ)", icon: CreditCard },
-  "journey3": { label: "Journey 3 (Direct)", icon: ArrowRight },
+  "ntb": { label: "Journey 1 (NTB)", icon: CreditCard },
+  "etb-nk": { label: "Journey 2 (ETB-NK)", icon: CreditCard },
+  "etb": { label: "Journey 3 (ETB)", icon: Zap },
+  "journey2": { label: "Journey 4 (Loan Offer)", icon: Gift },
 };
 
 export default function DemoToggle() {
@@ -21,7 +22,7 @@ export default function DemoToggle() {
   const cycleJourneyType = () => {
     let nextJourney: JourneyType;
     if (!journeyType) {
-      nextJourney = "journey2";
+      nextJourney = "ntb";
     } else {
       const currentIndex = JOURNEY_TYPES.indexOf(journeyType);
       const nextIndex = (currentIndex + 1) % JOURNEY_TYPES.length;
@@ -31,7 +32,7 @@ export default function DemoToggle() {
     setJourneyType(nextJourney);
 
     // Update PAN based on journey
-    const nextPan = nextJourney === "journey3" ? "EXSIT1234P" : "ABCDE1234E";
+    const nextPan = nextJourney === "etb" ? "EXSIT1234P" : "ABCDE1234E";
     updateFormData({ pan: nextPan });
   };
 

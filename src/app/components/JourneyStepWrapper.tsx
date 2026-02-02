@@ -1,29 +1,35 @@
-/* src/app/components/JourneyStepWrapper.tsx */
-
 "use client";
 
 import { motion } from "framer-motion";
+import { useJourney } from "@/app/context/JourneyContext";
+import StepError from "./steps/StepError";
 
 interface Props {
   children: React.ReactNode;
 }
 
 export default function JourneyStepWrapper({ children }: Props) {
+  const { error } = useJourney();
+
   return (
     <motion.div
-      className="w-full max-w-6xl"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
+      className="w-full"
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
       transition={{
-        duration: 0.3,
-        type: "spring",
-        damping: 25,
-        stiffness: 200,
-        mass: 0.5
+        duration: 0.4,
+        ease: "easeOut"
       }}
     >
-      {children}
+      {error ? (
+        <StepError
+          title={error.title}
+          message={error.message}
+        />
+      ) : (
+        children
+      )}
     </motion.div>
   );
 }

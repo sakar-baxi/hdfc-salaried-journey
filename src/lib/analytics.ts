@@ -3,7 +3,7 @@
 // We'll set the URL for our new analytics portal
 // In a real Vercel deployment, you would set NEXT_PUBLIC_ANALYTICS_API_ENDPOINT
 // as an environment variable pointing to your deployed analytics portal.
-const ANALYTICS_API_ENDPOINT = process.env.NEXT_PUBLIC_ANALYTICS_API_ENDPOINT || 'http://localhost:3001/api/ingest';
+const ANALYTICS_API_ENDPOINT = process.env.NEXT_PUBLIC_ANALYTICS_API_ENDPOINT || '/api/ingest';
 
 /**
  * Tracks a user event and sends it to the analytics portal.
@@ -11,6 +11,7 @@ const ANALYTICS_API_ENDPOINT = process.env.NEXT_PUBLIC_ANALYTICS_API_ENDPOINT ||
  * @param eventName The name of the event (e.g., 'page_viewed', 'otp_verified')
  * @param payload Extra data for the event
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const trackEvent = (eventName: string, payload: Record<string, any> = {}) => {
   // We get a persistent, anonymous user ID from localStorage
   // In a real app, this would be a more robust identifier.

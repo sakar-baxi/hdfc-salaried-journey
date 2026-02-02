@@ -3,16 +3,14 @@
 import { useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, MapPin, Search } from "lucide-react";
-import { trackEvent } from "@/lib/analytics"; // <-- IMPORT THE TRACKER
+import { CheckCircle2, MapPin, Search, ArrowRight } from "lucide-react";
+import { trackEvent } from "@/lib/analytics";
+import StepCard from "@/app/components/layout/StepCard";
 
 export default function StepPhysicalKyc() {
-  const { resetJourney } = useJourney();
+  const { resetJourney, goToStep } = useJourney();
 
-  // --- Track this screen view ---
   useEffect(() => {
     trackEvent('page_viewed', { page: 'physicalKyc' });
   }, []);
@@ -23,40 +21,76 @@ export default function StepPhysicalKyc() {
   };
 
   return (
-    <Card className="w-full border-none md:border md:shadow-xl md:rounded-lg mx-auto bg-card">
-      <CardHeader className="text-center items-center">
-        <Loader2 className="w-16 h-16 text-primary-cta animate-spin mb-4" />
-        <CardTitle className="text-text-darkest">Your Application is Saved</CardTitle>
-        <CardDescription>
-          Please visit your nearest HDFC Bank branch to complete your KYC.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="pincode" className="flex items-center">
-            <MapPin className="w-4 h-4 mr-2 text-text-gray-2"/>
-            Find your nearest branch
-          </Label>
-          <div className="flex space-x-2">
-            <Input id="pincode" placeholder="Enter your 6-digit Pincode" type="tel" maxLength={6} />
-            <Button variant="outline" size="icon">
-              <Search className="w-4 h-4" />
-            </Button>
+    <StepCard maxWidth="2xl">
+      {/* Success Icon */}
+      <div className="flex justify-center">
+        <div className="success-icon">
+          <CheckCircle2 className="w-8 h-8 text-success" />
+        </div>
+      </div>
+
+      {/* Header */}
+      <div className="page-header text-center">
+        <h1 className="page-title">Application Saved</h1>
+        <p className="page-subtitle">
+          Visit your nearest HDFC Bank branch to complete KYC verification
+        </p>
+      </div>
+
+      {/* Reference ID */}
+      <div className="bg-gray-50 rounded-lg border border-gray-200 p-6 space-y-2">
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+          Reference ID
+        </p>
+        <p className="text-3xl font-bold text-gray-900 text-center font-mono tracking-wide">
+          SR10002345
+        </p>
+        <p className="text-xs text-gray-500 text-center leading-relaxed">
+          Valid for 7 days. Please present this ID at the branch.
+        </p>
+      </div>
+
+      {/* Branch Locator */}
+      <div className="pt-2">
+        <label htmlFor="pincode" className="form-label">
+          Find Nearest Branch
+        </label>
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              id="pincode"
+              placeholder="Enter pincode"
+              type="tel"
+              maxLength={6}
+              className="enterprise-input pl-10"
+            />
           </div>
+          <Button className="btn-secondary px-4">
+            <Search className="w-5 h-5" />
+          </Button>
         </div>
-        <div className="p-4 bg-muted rounded-md text-center">
-          <p className="font-semibold text-text-dark">Your Application ID</p>
-          <p className="text-lg text-text-gray-2">SR10002345</p>
-          <p className="text-xs text-text-gray-1 mt-2">
-            Please show this ID at the branch. Your application details are saved with us for 7 days.
-          </p>
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button variant="primary-cta" className="w-full" onClick={handleDone}>
-          Done
+      </div>
+
+      {/* Actions */}
+      <div className="space-y-3 pt-2">
+        <Button
+          onClick={handleDone}
+          className="btn-primary w-full"
+        >
+          I've Noted the Details
+          <ArrowRight className="w-5 h-5" />
         </Button>
-      </CardFooter>
-    </Card>
+
+        <div className="text-center">
+          <button
+            onClick={() => goToStep("ekycHandler")}
+            className="btn-link"
+          >
+            Switch to Digital KYC (Faster)
+          </button>
+        </div>
+      </div>
+    </StepCard>
   );
 }

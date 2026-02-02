@@ -2,90 +2,73 @@
 
 import React, { useState, useEffect } from "react";
 import { useJourney } from "@/app/context/JourneyContext";
-import { CheckCircle2, Video, FileText } from "lucide-react";
+import { CheckCircle2, MapPin, FileText } from "lucide-react";
 import { trackEvent } from "@/lib/analytics";
-import AgentMessage from "@/app/components/chat/AgentMessage";
-import UserResponse from "@/app/components/chat/UserResponse";
-import HelpIcon from "@/app/components/shared/HelpIcon";
 
 export default function StepKycChoice() {
-  const { nextStep, currentStepIndex, journeySteps, formData, updateFormData } = useJourney();
+  const { nextStep, goToStep, formData, updateFormData } = useJourney();
   const [selectedMethod, setSelectedMethod] = useState<string | null>(formData.kycMethod || null);
 
-  const myIndex = journeySteps.findIndex(s => s.id === "kycChoice");
-  const isHistory = myIndex !== -1 && myIndex < currentStepIndex;
-  const isActive = myIndex === currentStepIndex;
-
   useEffect(() => {
-    if (isActive) {
-      trackEvent('page_viewed', { page: 'kyc_choice' });
-    }
-  }, [isActive]);
+    trackEvent('page_viewed', { page: 'kyc_choice' });
+  }, []);
 
-  const handleChoice = (method: "ekyc" | "vkyc") => {
+  const handleChoice = (method: "ekyc" | "physicalKyc") => {
     setSelectedMethod(method);
     updateFormData({ kycMethod: method });
     trackEvent('kyc_method_selected', { method });
 
-    // Just proceed to next step in the journey flow
-    setTimeout(() => {
+    if (method === "physicalKyc") {
+      goToStep("physicalKyc");
+    } else {
       nextStep();
-    }, 300);
+    }
   };
 
-  if (isHistory) {
-    return (
-      <div className="space-y-3">
-        <AgentMessage isNew={false}>
-          Great! Let's proceed with your chosen KYC method.
-        </AgentMessage>
-        <UserResponse isNew={false}>
-          <div className="flex items-center gap-2">
-            <span>{selectedMethod === "ekyc" ? "e-KYC via Aadhaar" : "Video KYC"}</span>
-            <CheckCircle2 className="w-3 h-3" />
-          </div>
-        </UserResponse>
-      </div>
-    );
-  }
-
-  if (!isActive) return null;
-
   return (
-    <div className="space-y-3 w-full animate-in slide-in-from-bottom-4 duration-300">
-      <AgentMessage>
-        How would you like to complete your KYC verification? Choose the option that works best for you.
-      </AgentMessage>
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-2 text-center mb-8">
+        <h1 className="text-2xl font-bold text-slate-900">KYC Verification</h1>
+        <p className="text-slate-500">Choose your preferred method to verify your identity</p>
+      </div>
 
-      <div className="pl-8 space-y-2">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 lg:p-8 space-y-4">
         <div
           onClick={() => handleChoice("ekyc")}
-          className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+          className="w-full flex items-center gap-4 p-5 rounded-xl border border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group relative overflow-hidden"
         >
-          <div className="w-10 h-10 rounded-lg bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center flex-shrink-0 transition-colors">
-            <FileText className="w-5 h-5 text-blue-600" />
+          <div className="w-12 h-12 rounded-xl bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center flex-shrink-0 transition-colors">
+            <FileText className="w-6 h-6 text-blue-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-900">e-KYC via Aadhaar</p>
-            <p className="text-xs text-slate-500">Instant verification using Aadhaar OTP</p>
+            <p className="text-base font-bold text-slate-900">e-KYC via Aadhaar</p>
+            <p className="text-sm text-slate-500">Fastest way. Requires Aadhaar registered mobile.</p>
           </div>
-          <HelpIcon tooltip="Complete verification in 2 minutes using your Aadhaar number and OTP" />
+          <div className="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-blue-600 flex items-center justify-center transition-colors">
+            <div className="w-3 h-3 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
 
         <div
-          onClick={() => handleChoice("vkyc")}
-          className="w-full flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all cursor-pointer group"
+          onClick={() => handleChoice("physicalKyc")}
+          className="w-full flex items-center gap-4 p-5 rounded-xl border border-slate-100 hover:border-blue-500 hover:bg-blue-50/50 transition-all cursor-pointer group relative overflow-hidden"
         >
-          <div className="w-10 h-10 rounded-lg bg-green-50 group-hover:bg-green-100 flex items-center justify-center flex-shrink-0 transition-colors">
-            <Video className="w-5 h-5 text-green-600" />
+          <div className="w-12 h-12 rounded-xl bg-orange-50 group-hover:bg-orange-100 flex items-center justify-center flex-shrink-0 transition-colors">
+            <MapPin className="w-6 h-6 text-orange-600" />
           </div>
           <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-900">Video KYC</p>
-            <p className="text-xs text-slate-500">Live video call with our agent</p>
+            <p className="text-base font-bold text-slate-900">Physical KYC</p>
+            <p className="text-sm text-slate-500">Visit nearest branch or schedule a visit.</p>
           </div>
-          <HelpIcon tooltip="Schedule a video call with our KYC agent for verification" />
+          <div className="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-blue-600 flex items-center justify-center transition-colors">
+            <div className="w-3 h-3 rounded-full bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
       </div>
+
+      <p className="text-center text-xs text-slate-400 max-w-sm mx-auto">
+        Verification is mandatory as per RBI guidelines. Your data is encrypted and secure.
+      </p>
     </div>
   );
 }

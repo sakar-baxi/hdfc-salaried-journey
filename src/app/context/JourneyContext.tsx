@@ -43,6 +43,11 @@ interface JourneyState {
   isResumeFlow: boolean;
   chatMessages: ChatMessage[];
   sendMessage: (content: string) => void;
+  showDashboard: boolean;
+  setShowDashboard: (show: boolean) => void;
+  error: { title: string; message: string; module?: string } | null;
+  setError: (error: { title: string; message: string; module?: string } | null) => void;
+  startJourney: (type: JourneyType, prefilledData?: Record<string, any>) => void;
 }
 
 // --- 2. Journey Logic ---
@@ -50,14 +55,17 @@ const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
   let stepIds: string[] = [];
 
   switch (journeyType) {
-    case "journey1": // Compact
-      stepIds = ["welcome", "kycChoice", "kycDetails", "videoKyc", "complete"];
+    case "ntb": // New to Bank (Optimized Full Flow)
+      stepIds = ["welcome", "ekycHandler", "profileDetails", "nomineeDetails", "videoKyc", "reviewApplication", "complete"];
       break;
-    case "journey2": // Standard Salary Account Journey (Full Flow)
-      stepIds = ["welcome", "kycChoice", "ekycHandler", "contactDetails", "combinedDetails", "kycDetails", "videoKyc", "reviewApplication", "complete"];
+    case "etb-nk": // Existing to Bank - No KYC
+      stepIds = ["welcome", "kycChoice", "ekycHandler", "profileDetails", "nomineeDetails", "reviewApplication", "complete"];
       break;
-    case "journey3": // Direct Conversion / Existing Account (Express Flow)
-      stepIds = ["welcome", "professionalDetailsExpress", "combinedDetails", "accountConversion", "complete"];
+    case "etb": // Express Flow
+      stepIds = ["welcome", "profileDetails", "reviewApplication", "complete"];
+      break;
+    case "journey2": // Loan Offer Journey
+      stepIds = ["welcome", "loanOffer", "reviewApplication", "complete"];
       break;
   }
 
@@ -65,7 +73,7 @@ const getInitialStepsForJourney = (journeyType: JourneyType): Step[] => {
 };
 
 const getInitialStepsForUserType = (userType: UserType): Step[] => {
-  return getInitialStepsForJourney("journey2");
+  return getInitialStepsForJourney("ntb");
 };
 
 // --- 3. Context & Provider ---
@@ -76,9 +84,11 @@ const LOCAL_STORAGE_PREFIX = "hdfcJourney_";
 
 export const JourneyProvider = ({ children }: { children: ReactNode }) => {
   const [userType, _setUserType] = useState<UserType>("ntb");
-  const [journeyType, _setJourneyType] = useState<JourneyType | null>("journey3"); // Default to Journey 3 (Express)
+  const [journeyType, _setJourneyType] = useState<JourneyType | null>(null);
   const [currentStepIndex, _setCurrentStepIndex] = useState(0);
-  const [journeySteps, _setJourneySteps] = useState<Step[]>(getInitialStepsForJourney("journey3"));
+  const [journeySteps, _setJourneySteps] = useState<Step[]>([]);
+  const [showDashboard, setShowDashboard] = useState(true);
+  const [error, setError] = useState<{ title: string; message: string } | null>(null);
   const [currentBranchComponent, _setCurrentBranchComponent] = useState<React.ComponentType | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([
     {
@@ -122,7 +132,19 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     setNotifications(prev => [newNotif, ...prev]);
   }, []);
 
-  const [formData, _setFormData] = useState<Record<string, any>>({});
+  const [formData, _setFormData] = useState<Record<string, any>>({
+    mobileNumber: "9934090013",
+    dob: "1990-05-15",
+    pan: "ABCDE1234F",
+    email: "sachin.bansal72@gmail.com",
+    fatherName: "S. K. Bansal",
+    motherName: "Anita Bansal",
+    maritalStatus: "married",
+    currentAddress: "123, Green Park, New Delhi, 110016",
+    income: "1250000",
+    nomineeName: "Priya Bansal",
+    nomineeRelation: "spouse"
+  });
 
   const updateFormData = useCallback((newData: Record<string, any>) => {
     _setFormData(prev => {
@@ -211,9 +233,9 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem(`${LOCAL_STORAGE_PREFIX}formData`);
     }
     _setUserType("ntb");
-    _setJourneyType("journey2");
+    _setJourneyType("ntb");
     _setFormData({});
-    const newSteps = getInitialStepsForJourney("journey2");
+    const newSteps = getInitialStepsForJourney("ntb");
     _setJourneySteps(newSteps);
     _setCurrentStepIndex(0);
     setBranchComponent(null); // Reset branch
@@ -276,9 +298,9 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
             resetJourney();
           }
         } else {
-          // If no saved session, ensure we are in a clean Journey 2 state
-          _setJourneyType("journey2");
-          _setJourneySteps(getInitialStepsForJourney("journey2"));
+          // If no saved session, ensure we are in a clean NTB state
+          _setJourneyType("ntb");
+          _setJourneySteps(getInitialStepsForJourney("ntb"));
         }
       } catch (error) {
         resetJourney();
@@ -336,6 +358,19 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const startJourney = useCallback((type: JourneyType, prefilled?: Record<string, any>) => {
+    _setJourneyType(type);
+    const newSteps = getInitialStepsForJourney(type);
+    setJourneySteps(newSteps);
+    setStepIndex(0);
+    setBranchComponent(null);
+    if (prefilled) {
+      updateFormData(prefilled);
+    }
+    setShowDashboard(false);
+    setError(null);
+  }, [setJourneySteps, setStepIndex, setBranchComponent, updateFormData]);
+
   const CurrentStepComponent = journeySteps[currentStepIndex]
     ? STEP_COMPONENTS[journeySteps[currentStepIndex].id]
     : () => null;
@@ -365,6 +400,11 @@ export const JourneyProvider = ({ children }: { children: ReactNode }) => {
         isResumeFlow,
         chatMessages,
         sendMessage,
+        showDashboard,
+        setShowDashboard,
+        error,
+        setError,
+        startJourney,
       }}
     >
       {children}
